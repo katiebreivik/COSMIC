@@ -101,6 +101,7 @@ def parse_commandline():
                         "it reach Niter binaries", type=int, default=10000)
     parser.add_argument("--binary_state", nargs='+', type=int)
     parser.add_argument("--sampling_method")
+    parser.add_argument("--keep_singles")
     parser.add_argument("--primary_model", help="Chooses the initial primary mass function from: salpeter55, kroupa93, kroupa01", type=str)
     parser.add_argument("--binfrac_model", help="Chooses the binary fraction model from: a float between [0,1] and vanHaaften", type=float)
     parser.add_argument("--ecc_model", help="Chooses the initial eccentricity distribution model from: thermal, uniform, and sana12", type=str)
@@ -292,7 +293,8 @@ if __name__ == '__main__':
                                                         SF_start = sampling['SF_start'],
                                                         SF_duration = sampling['SF_duration'],
                                                         met = sampling['metallicity'],
-                                                        size = args.Nstep)
+                                                        size = args.Nstep,
+                                                        keep_singles = sampling['keep_singles'])
             IBT, mass_singles, mass_binaries, n_singles, n_binaries = init_samp_list
 
         if sampling['sampling_method'] == 'multidim':
@@ -305,6 +307,7 @@ if __name__ == '__main__':
                                                         SF_duration = sampling['SF_duration'],
                                                         met = sampling['metallicity'],
                                                         size = args.Nstep,
+                                                        keep_singles = sampling['keep_singles'],
                                                         pool=pool)
             IBT, mass_singles, mass_binaries, n_singles, n_binaries = init_samp_list
 
