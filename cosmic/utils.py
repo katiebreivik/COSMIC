@@ -223,6 +223,11 @@ def conv_select(bcm_save, bpp_save, final_kstar_1, final_kstar_2, method, conv_l
             "{0}".format(_known_methods)
         )
 
+    # Filtering out all single stars for convergence calculations
+    bpp_first = bpp_save.groupby('bin_num').first().reset_index()
+    bpp_first_binary_bin_num = bpp_first.loc[bpp_first.mass_2 > 0.0].bin_num
+    bpp_save = bpp_save.loc[bpp_save.bin_num.isin(bpp_first_binary_bin_num)] 
+
     if method == "formation":
         # filter the bpp array to find the systems that match the user-specified
         # final kstars
@@ -1355,6 +1360,9 @@ def check_initial_conditions(initial_binary_table):
         ) / (a[12] + a[13] * m ** 2 + (a[14] * m ** 8 + m ** 18 + a[15] * m ** 19) * mx)
 
         return rzams
+
+    # filter out single stars
+    initial_binary_table = initial_binary_table.loc[initial_binary_table["mass_2"] > 0.0].copy()
 
     z = np.asarray(initial_binary_table["metallicity"])
     zpars, a = zcnsts(z)
