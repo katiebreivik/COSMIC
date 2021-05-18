@@ -284,7 +284,7 @@ if __name__ == '__main__':
 
         # Select the initial binary sample method from user input
         if sampling['sampling_method'] == 'independent':
-            if args.qmin is not None:
+            if hasattr(args, 'qmin'):
                 init_samp_list = InitialBinaryTable.sampler(format_ = sampling['sampling_method'],
                                                             final_kstar1 = kstar1_range,
                                                             final_kstar2 = kstar2_range,
@@ -299,7 +299,7 @@ if __name__ == '__main__':
                                                             size = args.Nstep,
                                                             qmin = args.qmin,
                                                             params = args.inifile)
-            elif args.m2_min is not None:
+            elif hasattr(args, 'm2_min'):
                 init_samp_list = InitialBinaryTable.sampler(format_ = sampling['sampling_method'],
                                                             final_kstar1 = kstar1_range,
                                                             final_kstar2 = kstar2_range,
