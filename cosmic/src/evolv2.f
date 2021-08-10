@@ -215,7 +215,7 @@
 *
       REAL*8 qc_fixed
       LOGICAL switchedCE,disrupt
-
+      REAL*8 Rs,Ru
 Cf2py intent(in) kstar
 Cf2py intent(in) mass
 Cf2py intent(in) tb
@@ -2160,6 +2160,76 @@ component.
          elseif(kstar(j1).ge.10)then
             qc = 0.628
          endif
+
+      elseif(qcflag.eq.6)then
+*
+* First check to make sure we only apply to high mass donors
+*
+         if(mass(j1).gt.18.and.kstar(j1).le.6.and.kstar(j1).ge.3)then
+            if(z/zsun.le.0.5)then
+               if(mass(j1).lt.60)then
+                  qc = 1.d0/0.36
+               elseif(mass(j1).lt.80)then
+                  qc = 1.d0/0.21
+               else
+                  qc = 1.d0/0.19
+               endif
+            else
+               if(mass(j1).lt.60)then
+                  qc = 1.d0/0.36
+               elseif(mass(j1).lt.80)then
+                  qc = 1.d0/0.29
+               else
+                  qc = 1.d0/0.19
+               endif
+*
+* If you satisfied those criteria, now you need to check the stability
+* of the donor envelope
+
+            endif
+            if(q(j1).gt.qc.and.z/zsun.lt.0.5)then
+               Rs = -0.29 * mass(j1) * mass(j1) + 
+     &              30.0 * mass(j1) - 498.d0
+               Ru = 26.3 * mass(j1)
+               if(rad(j1).le.Ru)then
+                  qc = 0.d0
+               elseif(rad(j1).gt.Rs)then
+                  qc = 0.d0
+               endif
+            elseif(q(j1).gt.qc.and.z/zsun.ge.0.5)then
+               Ru = 62.3 * mass(j1) - 515.d0
+               if(rad(j1).ge.Ru)then
+                  qc = 0.d0
+               endif
+            endif
+         else
+*
+* If not in the above criteria, just use StarTrack
+*
+            if(kstar(j1).eq.0)then
+               qc = 3.d0
+            elseif(kstar(j1).eq.1)then
+               qc = 3.d0
+            elseif(kstar(j1).eq.2)then
+               qc = 3.d0
+            elseif(kstar(j1).eq.3)then
+               qc = 3.d0
+            elseif(kstar(j1).eq.4)then
+               qc = 3.d0
+            elseif(kstar(j1).eq.5)then
+               qc = 3.d0
+            elseif(kstar(j1).eq.6)then
+               qc = 3.d0
+            elseif(kstar(j1).eq.7)then
+               qc = 1.7d0
+            elseif(kstar(j1).eq.8)then
+               qc = 3.5
+            elseif(kstar(j1).eq.9)then
+               qc = 3.5
+            elseif(kstar(j1).ge.10)then
+               qc = 0.628
+            endif
+         endif
       endif
 *
 * Allow for manually overriding qcrit values with fixed
@@ -2264,6 +2334,7 @@ component.
      &        .and.(q(j1).gt.qc.or.radx(j1).le.radc(j1))).or.
      &       (kstar(j1).eq.2.and.q(j1).gt.qc).or.
      &       (kstar(j1).eq.4.and.q(j1).gt.qc))then
+
 *
 * Common-envelope evolution.
 *
