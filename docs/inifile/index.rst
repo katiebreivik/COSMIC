@@ -547,6 +547,9 @@ common envelope occurs regardless of the choices below:
 
                             ``5`` : follows `Section 2.3 of Neijssel+2020 <https://ui.adsabs.harvard.edu/abs/2019MNRAS.490.3740N/abstract>`_; mass transfer from stripped stars is always assumed to be dynamically stable
 
+                            ``6`` : follows `Section 3.1 of Olejak+2021 <https://ui.adsabs.harvard.edu/abs/2021A%26A...651A.100O/abstract>`_; only applies new prescription
+                            to donors with M>18Msun and with Hydrogen-rich envelopes, follows qcflag=4 (Belcyznski+2008) otherwise. Different qc values are for mass ranges: 18-60Msun, 60-80Msun (subdivided above/below 0.5Zsun), >80Msun with
+
                          **qcflag = 1**
 
                          .. csv-table:: Comparison of qcrit Values (Donor Mass/Accretor Mass) For Each Donor Kstar Type Across Flag Options
@@ -557,6 +560,10 @@ common envelope occurs regardless of the choices below:
                          Eq.1: ``qc = 0.362 + 1.0/(3.0*(1.0 - massc(j1)/mass(j1)))``, which is from Hjellming & Webbink 1983
 
                          Eq.2: ``qc = (1.67d0-zpars(7)+2.d0*(massc(j1)/mass(j1))**5)/2.13d0``, which is from Claeys+ 2014
+
+                         for qcflag = 6, if mass transfer is stable based on qc, then the Mass - Radius relation is checked and donors with radii between
+                         ``Rs = -0.29Mdon**2 + 30.3Mdon - 498`` and ``Ru = 26.3Mdon + 262`` is stable (and unstable otherwise) for
+                         donors with metallicities below 0.5Zsun and below ``Ru = 62.3Mdon - 515`` for donors with metallicity above or equal to 0.5Zsun
 
 ``qcrit_array``          Array of dimensions (1,16) specifying user-input values for the
                          critical mass ratios that govern the onset of unstable
