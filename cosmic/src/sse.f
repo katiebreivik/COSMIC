@@ -37,7 +37,7 @@ c-------------------------------------------------------------c
 *
       integer i,kw,j,k
 *
-      real*8 mass,mt,z,zpars(20),vs(3),kick_info(12)
+      real*8 mass,mt,z,zpars(20),vs(3),kick_info(2,17)
       real*8 epoch,tms,tphys,tphysf,dtp
       real*8 r,lum,ospin
       real*8 mc,rc,menv,renv
@@ -84,20 +84,40 @@ c-------------------------------------------------------------c
 * initial mass, current mass, type, current time & epoch,
 * otherwise the star will start on the ZAMS.
 *
-      OPEN(22,file='evolve.in',status='old')
-      READ(22,*)mass,z,tphysf
-      READ(22,*)neta,bwind,hewind,sigma,windflag
-      READ(22,*)ifflag,wdflag,bhflag,remnantflag,mxns,idum
-      READ(22,*)pts1,pts2,pts3
+*      OPEN(22,file='evolve.in',status='old')
+*      READ(22,*)mass,z,tphysf
+*      READ(22,*)neta,bwind,hewind,sigma,windflag
+*      READ(22,*)ifflag,wdflag,bhflag,remnantflag,mxns,idum
+*      READ(22,*)pts1,pts2,pts3
 *
 ************************************************************************
 *
 * Set parameters which depend on the metallicity 
 *
+
+      mass = 1.0
+      z = 0.02
+      zsun = 0.02
+      neta = 0.5
+      bwind = 0.0
+      sigma = 265.0
+      windflag = 1
+      ifflag = 0
+      wdflag = 1
+      bhflag = 1
+      remnantflag = 3
+      mxns = 3
+      idum1 = 42
+      pts1 = 0.05
+      pts2 = 0.01
+      pts3 = 0.02
+      tphysf = 13700.0
+
       CALL zcnsts(z,zpars)
-      if(idum.gt.0) idum = -idum
-      do i=1,12
-         kick_info(i) = 0.d0
+      if(idum1.gt.0) idum1 = -idum1
+      do i=1,17
+         kick_info(1,i) = 0.d0
+         kick_info(2,i) = 0.d0
       enddo
 *
       if(mass.gt.0.0)then
@@ -115,7 +135,6 @@ c-------------------------------------------------------------c
          READ(22,*)mass,mt,kw,tphys,epoch
       endif
       CLOSE(22)
-      WRITE(*,*)
 *
 * Set the initial spin of the star. If ospin is less than or equal to 
 * zero at time zero then evolv1 will set an appropriate ZAMS spin. If 
@@ -132,7 +151,6 @@ c-------------------------------------------------------------c
 * tphysf will mean that no data is stored.
 *
       dtp = 0.d0
-* 
       CALL evolv1(kw,mass,mt,r,lum,mc,rc,menv,renv,ospin,
      &            epoch,tms,tphys,tphysf,dtp,z,zpars,kick_info)
 *
@@ -167,13 +185,14 @@ c-------------------------------------------------------------c
 * of evolution stage.
 *
       j = 0
+      if(j.eq.0) WRITE(*,*)'kstar   time       mass'
  50   j = j + 1
       if(spp(j,1).lt.0.0) goto 60
-      kw = INT(spp(j,2))
-      WRITE(*,100)label(kw+1),spp(j,1),spp(j,3)
+      kw = INT(spp(j,3))
+      WRITE(*,100)kw,spp(j,1),spp(j,2)
       goto 50
  60   continue
- 100  format(a30,' Time ',f10.1,' Mass ',f7.3)
+ 100  format(i4.1,f14.3,f9.6)
       WRITE(*,*)
 *
 ************************************************************************
