@@ -4,6 +4,7 @@
      &                      teff,rc,menv,renv,ospin,B_0,
      &                      bacc,tacc,epoch,bhspin)
         IMPLICIT NONE
+        INCLUDE 'const_bse.h'
 *
 * Write results to spp array.
 *
@@ -14,10 +15,7 @@
         REAL*8 mc,rad,m0,lum,teff,rc,menv,renv,ospin
         REAL*8 B_0,bacc,tacc,epoch,bhspin
         INTEGER jp,kstar
-        REAL scm(50000,16),spp(25,20)
-        COMMON /SINGLE/ scm,spp
 
-        jp = MIN(900,jp + 1)
         spp(jp,1) = tphys
         spp(jp,2) = mass
         spp(jp,3) = float(kstar)
@@ -45,6 +43,7 @@
      &                      mc,rc,menv,renv,epoch,deltam,
      &                      ospin,B_0,SN)
         IMPLICIT NONE
+        INCLUDE 'const_bse.h'
 *
 * Write results to bcm array.
 *
@@ -55,10 +54,7 @@
         REAL*8 menv,renv,epoch,ospin,B_0,deltam
         INTEGER kstar,SN
         INTEGER ip
-        REAL scm(50000,16),spp(25,20)
-        COMMON /SINGLE/ scm,spp
 
-        ip = ip + 1
         scm(ip,1) = tphys
         scm(ip,2) = float(kstar)
         scm(ip,3) = m0

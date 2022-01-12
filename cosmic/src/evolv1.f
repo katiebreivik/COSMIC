@@ -1,7 +1,7 @@
 ***
       SUBROUTINE evolv1(kw,mass,mt,r,lum,mc,rc,menv,renv,ospin,
      &                  epoch,tm,tphys,tphysf,dtp,z,zpars,
-     &                  kick_info,B_0)
+     &                  kick_info)
 c-------------------------------------------------------------c
 c
 c     Evolves a single star.
@@ -35,16 +35,17 @@ c       15 - Massless Supernova
 c
 c-------------------------------------------------------------c
       implicit none
+      INCLUDE 'const_bse.h'
 *
-      integer kw,it,ip,jp,j,kwold,rflag,fb,k2str,pulsar
-      integer nv,aic,bdecayfac,intpol,k
+      integer kw,it,ip,jp,j,kwold,fb,k2str,pulsar
+      integer nv,intpol,k
       parameter(nv=50000)
 *
       real*8 mass,z,aj
       real*8 epoch,tphys,tphys2,tmold,tbgold
       real*8 mt,tm,tn,tphysf,dtp,tsave
       real*8 tscls(20),lums(10),GB(10),zpars(20)
-      real*8 r,lum,mc,teff,rc,menv,renv,kick_info(12)
+      real*8 r,lum,mc,teff,rc,menv,renv,kick_info(2,17)
       real*8 ospin,jspin,djt,djmb,k2,k3
       parameter(k3=0.21d0)
       real*8 m0,r1,lum1,mc1,rc1,menv1,renv1,k21
@@ -63,22 +64,15 @@ c-------------------------------------------------------------c
       PARAMETER(yeardy=365.24d0,aursun=214.95d0,yearsc=3.1557d+07)
       REAL*8 twopi,u1,u2,mew,tacc
       REAL*8 fallback,vk,B_0,B,ospbru,b01_bcm,b_mdot,b_mdot_lim
-      REAL*8 bacc,Bbot,bconst,CK,convradcomp,deltam,dspint,eqspin
-      REAL*8 dtj,ecsn,ecsn_mlow,htpmb,evolve_type,idum1
-      REAL*8 omdot,sigma,sigmadiv,sigmahold,sn,bhspin,s,zsun
+      REAL*8 bacc,Bbot,convradcomp,deltam,dspint,eqspin
+      REAL*8 dtj,evolve_type
+      REAL*8 omdot,sigmahold,sn,bhspin,s
       REAL*8 djtx,djspint,jspbru,Kconst
       REAL*8 bkick(20)
 *
-      REAL*8 neta,bwind,hewind,mxns
-      COMMON /VALUE1/ neta,bwind,hewind,mxns
-      REAL*8 pts1,pts2,pts3
-      COMMON /POINTS/ pts1,pts2,pts3
-      REAL scm(50000,16),spp(25,20)
-      COMMON /SINGLE/ scm,spp
       REAL ran3
       EXTERNAL ran3
 *
-      idum1 = 435.d0
       dtm = 0.d0
       r = 0.d0
       lum = 0.d0
@@ -91,11 +85,10 @@ c-------------------------------------------------------------c
          jspin = 1.0d-10
       endif
       k2 = 0.15d0
-      rflag = 0
 * PDK additions
       fb = 1 !turns kick velocity limit owning to fallback on (1) or off (0).
       vk = 0.d0 !gets passed to and from kick(), is kick mag. can be used to set initial pulsar particulars.
-      B_0 = 0.d0 !initialize magnetic field to zero
+      B_0 = 0.0
       k2str = 0
       if(kw.ne.13)then
             bacc = 0.d0
@@ -107,14 +100,12 @@ c-------------------------------------------------------------c
       Kconst = 2.5d-49
 
       twopi = 2.d0*ACOS(-1.d0)
-      zsun = 0.02
-
 
 *
 * Setup variables which control the output (if it is required).
 *
-      ip = 0
-      jp = 0
+      ip = 1
+      jp = 1
       tsave = tphys
       isave = .true.
       iplot = .false.
@@ -349,7 +340,7 @@ c-------------------------------------------------------------c
 * If mass loss has occurred and no type change then check that we
 * have indeed limited the radius change to 10%.
 *
-         if(kw.eq.kwold.and.dms.gt.0.d0.and.rflag.ne.0)then
+         if(kw.eq.kwold.and.dms.gt.0.d0)then
             mt2 = mt + dms
             dml = dms/dtm
             it = 0
@@ -500,8 +491,7 @@ c-------------------------------------------------------------c
 * Record values for plotting and reset epoch.
 *
             epoch = tphys - aj
-            jp = jp + 1
-            ip = ip + 1
+
             CALL WRITESPP(jp,tphys,evolve_type,
      &                    mass,kw,aj,tm,mc,r,m0,lum,
      &                    teff,rc,menv,renv,ospin,b01_bcm,
@@ -509,13 +499,14 @@ c-------------------------------------------------------------c
             CALL WRITESCM(ip,tphys,kw,m0,mass,lum,r,teff,
      &                    mc,rc,menv,renv,epoch,deltam,
      &                    ospin,b01_bcm,SN)
+            jp = jp + 1
+            ip = ip + 1
             if(kw.eq.15)then
                goto 90
             endif
          endif
 *
          if(tphys.ge.tphysf)then
-            jp = jp + 1
             CALL WRITESPP(jp,tphys,evolve_type,
      &                    mass,kw,aj,tm,mc,r,m0,lum,
      &                    teff,rc,menv,renv,ospin,B_0,
