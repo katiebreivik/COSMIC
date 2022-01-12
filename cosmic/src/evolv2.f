@@ -401,7 +401,7 @@ component.
          if(ospin(1).lt.0.d0) ospin(1) = oorb
          if(ospin(2).lt.0.d0) ospin(2) = oorb
       endif
-*
+
       do 500 , k = kmin,kmax
          age = tphys - epoch(k)
          mc = massc(k)
@@ -443,6 +443,7 @@ component.
          endif
 *
  500  continue
+*
 *
       if(output) write(*,*)'Init:',mass(1),mass(2),massc(1),massc(2),
      & rad(1),rad(2),kstar(1),kstar(2),sep,ospin(1),ospin(2),jspin(1),

@@ -35,13 +35,18 @@
 *
       INCLUDE 'const_bse.h'
 *
-      integer i,kw,kw2,kstar(2),j,k,time
+      integer i,kw,kw2,kstar(2),j,k,time,idum
 *
-      real*8 mass0(2),mass(2),z,zpars(20),vs(3),kick_info(12)
-      real*8 epoch(2),tms(2),tphys,tphysf,dtp,aj
-      real*8 rad(2),lum(2),ospin(2)
-      real*8 massc(2),radc(2),menv(2),renv(2)
-      real*8 tb,ecc,yearsc
+      INTEGER bcm_index_out, bpp_index_out
+*
+
+      REAL*8 mass0(2),mass(2),z,zpars(20),kick_info(2,17)
+      REAL*8 epoch(2),tms(2),tphys,tphysf,dtp,aj
+      REAL*8 rad(2),lum(2),ospin(2),kick_info_out(2,17)
+      REAL*8 massc(2),radc(2),menv(2),renv(2),bhspin(2)
+      REAL*8 tb,ecc,yearsc,bkick(20)
+      REAL*8 B_0(2),bacc(2),tacc(2),xip,xihold
+
       PARAMETER(yearsc=3.1557d+07)
       CHARACTER*8 label(14)
 *
@@ -91,41 +96,73 @@
 * current age, initial mass and spin rate, 
 * otherwise the star will start on the ZAMS.
 *
-      OPEN(22,file='binary.in', status='old')
-      READ(22,*)mass0(1),mass0(2),tphysf,tb,kstar(1),kstar(2),z,ecc
-      READ(22,*)neta,bwind,hewind,alpha1,lambda,windflag
-      READ(22,*)ceflag,tflag,ifflag,wdflag,bhflag,remnantflag,mxns,idum
-      READ(22,*)pts1,pts2,pts3
-      READ(22,*)sigma,beta,xi,acc2,epsnov,eddfac,gamma
-      if(kstar(1).lt.0.or.kstar(2).lt.0)then
-         READ(22,*)tphys
-         READ(22,*)aj,mass(1),ospin(1)
-         epoch(1) = tphys - aj
-         kstar(1) = ABS(kstar(1))
-         READ(22,*)aj,mass(2),ospin(2)
-         epoch(2) = tphys - aj
-         kstar(2) = ABS(kstar(2))
-      else
+
+***KB MODIFIED PARAMS.INI to params_fortran.in to read in flags
+      OPEN(22,file='params_fortran.in', status='old')
+      do i=1,12
+         READ(22,*)
+      enddo
+      READ(22,*)dtp,pts1,pts2,pts3,zsun,windflag,eddlimflag
+      READ(22,*)neta,bwind,hewind,beta,xi,acc2
+      READ(22,*)alpha1,lambdaf,ceflag,cekickflag
+      READ(22,*)cemergeflag,cehestarflag,qcflag
+      READ(22,*)kickflag,sigma,bhflag,bhsigmafrac
+      READ(22,*)sigmadiv,ecsn,ecsn_mlow
+      READ(22,*)aic,ussn,pisn,polar_kick_angle
+      READ(22,*)remnantflag,mxns,rembar_massloss
+      READ(22,*)bhspinflag,bhspinmag,grflag
+      READ(22,*)eddfac,gamma,don_lim,acc_lim,tflag,ST_tide
+      READ(22,*)ifflag,wdflag,epsnov,bdecayfac,bconst,ck
+      READ(22,*)rejuv_fac,rejuvflag,bhms_coll_flag,htpmb,ST_cr
+
+
+** For now let's hardcode the masses and orbital periods
 *
 * Initialize the parameters.
 * Set the initial spin of the stars. If ospin is zero (actually < 0.001)
-* at time zero then evolv2 will set an appropriate ZAMS spin. If 
+* at time zero then evolv2 will set an appropriate ZAMS spin. If
 * ospin is greater than zero then it will start with that spin regardless
-* of the time. If you want to start at time zero with negligible spin 
+* of the time. If you want to start at time zero with negligible spin
 * then I suggest using a negligible value (but greater than 0.001).
 * If ospin is negative then the stars will be in co-rotation with the orbit.
 *
-         tphys = 0.d0
-         mass(1) = mass0(1)
-         epoch(1) = 0.d0
-         ospin(1) = 0.d0
-         mass(2) = mass0(2)
-         epoch(2) = 0.d0
-         ospin(2) = 0.d0
-      endif
-      do i=1,12
-         kick_info(i) = 0.d0
-      enddo 
+
+      tphys = 0.0
+      tphysf = 13700.0
+      dtp = 0.0
+      mass(1) = 10.0
+      mass(2) = 5.0
+      mass0(1) = 10.0
+      mass0(2) = 5.0
+      kstar(1) = 1
+      kstar(2) = 1
+      epoch(1) = 0.d0
+      ospin(1) = 0.d0
+      epoch(2) = 0.d0
+      ospin(2) = 0.d0
+* note orbital period (tb) is in units of days
+      tb = 10000.d0
+      ecc = 0.5
+      z = 0.02
+      idum = 50
+
+* initialize kick_info and natal_kick_array
+      do j=1,2
+         do i=1,12
+            kick_info(j,i) = 0.d0
+         enddo
+         do i=1,5
+            natal_kick_array(j,i)=-100.d0
+         enddo
+      enddo
+* initialize qcrit_array & fprimc_array
+      do j=1,16
+         qcrit_array(j) = 0.d0
+         fprimc_array(j) = 2.0/21.0
+      enddo
+
+
+
 * If you would like to enter the seperation as input in place of the binary
 * orbital period uncomment these lines (depending upon which units you wish
 * to use).
@@ -171,19 +208,27 @@
 * store data only at the start and end while a value of dtp greater than 
 * tphysf will mean that no data is stored.
 *
-      dtp = 0.d0
+*** KB: this is now fixed in the Params file
+*      dtp = 0.d0
 *
 * Evolve the binary.
-* 
-      CALL evolv2(kstar,mass0,mass,rad,lum,massc,radc,
-     &            menv,renv,ospin,epoch,tms,
-     &            tphys,tphysf,dtp,z,zpars,tb,ecc,kick_info)
 *
+      CALL zcnsts(z,zpars)
+
+      CALL evolv2(kstar,mass,tb,ecc,z,tphysf,
+     &            dtp,mass0,rad,lum,massc,radc,
+     &            menv,renv,ospin,B_0,bacc,tacc,epoch,tms,
+     &            bhspin,tphys,zpars,bkick,kick_info,
+     &            bpp_index_out,bcm_index_out,kick_info_out)
+
+      do i=1,15
+         WRITE(*,*)bpp(i,1),bpp(i,2),bpp(i,3),bpp(i,4),bpp(i,5)
+      enddo
 ************************************************************************
 * Output:
 * First check that bcm is not empty.
 *
-      if(bcm(1,1).lt.0.0) goto 50
+*      if(bcm(1,1).lt.0.0) goto 50
 *
 * The bcm array stores the stellar and orbital parameters at the 
 * specified output times. The parameters are (in order of storage):
@@ -204,33 +249,32 @@
       endif
       kw = INT(bcm(j,2))
       kw2 = INT(bcm(j,16))
-      WRITE(23,99)bcm(j,1),kw,kw2,bcm(j,4),bcm(j,18),
-     &            bcm(j,8),bcm(j,22), 
+      WRITE(23,99)bcm(j,1),kw,kw2,
+     &            bcm(j,4),bcm(j,18),bcm(j,8),bcm(j,22),
+     &            bcm(j,10),bcm(j,24),bcm(j,11),bcm(j,25),
      &            bcm(j,6),bcm(j,20),bcm(j,15),bcm(j,29),
-     &            bcm(j,5),bcm(j,19),bcm(j,13),bcm(j,27),
-     &            bcm(j,14),bcm(j,28),
      &            bcm(j,31),bcm(j,32)
       if(bcm(j,1).ge.0.0) goto 30
       CLOSE(23)
- 99   FORMAT(g30.18,2i3,10g30.18,5e30.18,g30.18)
+ 99   FORMAT(g30.18,2i3,14g30.18)
  999  FORMAT(g30.18,2g30.18,1p,2e30.18)
 *
 * The bpp array acts as a log, storing parameters at each change
 * of evolution stage.
 *
- 50   j = 0
-      WRITE(*,*)'     TIME      M1       M2   K1 K2        SEP    ECC',  
-     &          '  R1/ROL1 R2/ROL2  TYPE'
- 52   j = j + 1
-      if(bpp(j,1).lt.0.0) goto 60
-      kstar(1) = INT(bpp(j,4))
-      kstar(2) = INT(bpp(j,5))
-      kw = INT(bpp(j,10))
-      WRITE(*,100)(bpp(j,k),k=1,3),kstar,(bpp(j,k),k=6,9),label(kw)
-      goto 52
- 60   continue
- 100  FORMAT(g30.18,2g30.18,2i3,g30.18,g30.18,2g30.18,2x,a8)
-      WRITE(*,*)
+* 50   j = 0
+*      WRITE(*,*)'     TIME      M1       M2   K1 K2        SEP    ECC',
+*     &          '  R1/ROL1 R2/ROL2  TYPE'
+* 52   j = j + 1
+*      if(bpp(j,1).lt.0.0) goto 60
+*      kstar(1) = INT(bpp(j,4))
+*      kstar(2) = INT(bpp(j,5))
+*      kw = INT(bpp(j,10))
+*      WRITE(*,100)(bpp(j,k),k=1,3),kstar,(bpp(j,k),k=6,9),label(kw)
+*      goto 52
+* 60   continue
+* 100  FORMAT(g30.18,2g30.18,2i3,g30.18,g30.18,2g30.18,2x,a8)
+*      WRITE(*,*)
 *
 ************************************************************************
 *
