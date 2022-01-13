@@ -141,7 +141,7 @@
       epoch(2) = 0.d0
       ospin(2) = 0.d0
 * note orbital period (tb) is in units of days
-      tb = 10000.d0
+      tb = 100.d0
       ecc = 0.5
       z = 0.02
       idum = 50
@@ -222,7 +222,7 @@
      &            bpp_index_out,bcm_index_out,kick_info_out)
 
       do i=1,15
-         WRITE(*,*)bpp(i,1),bpp(i,2),bpp(i,3),bpp(i,4),bpp(i,5)
+         WRITE(*,*)bpp(i,1),bpp(i,2),bpp(i,3),bpp(i,4),bpp(i,5),bpp(i,7)
       enddo
 ************************************************************************
 * Output:
