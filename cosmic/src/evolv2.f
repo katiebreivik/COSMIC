@@ -2534,6 +2534,8 @@ component.
             m_merge(2) = mass(j2)
             t_merge = tphys
          endif
+         WRITE(*,*)'you should see me bb'
+         WRITE(*,*)t_merge,m_merge,k_merge
          CALL CONCATKSTARS(kstar(j1), kstar(j2), mergertype)
          dm1 = mass(j1)
          mass(j1) = 0.d0
@@ -4417,6 +4419,8 @@ component.
          tb = -1.d0
       endif
       tb = tb*yeardy
+      WRITE(*,*)'okay we are done here'
+      WRITE(*,*)t_merge,m_merge,k_merge
 
       if(jp.ge.1000)then
          WRITE(*,*)' STOP: EVOLV2 ARRAY ERROR '
