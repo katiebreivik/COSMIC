@@ -3,7 +3,8 @@
      \ dtp,mass0,rad,lumin,massc,radc,
      \ menv,renv,ospin,B_0,bacc,tacc,epoch,tms,
      \ bhspin,tphys,zpars,bkick,kick_info,
-     \ bpp_index_out,bcm_index_out,kick_info_out)
+     \ bpp_index_out,bcm_index_out,kick_info_out,
+     \ bbh_select,t_merge,m_merge)
       IMPLICIT NONE
       INCLUDE 'const_bse.h'
       INCLUDE 'checkstate.h'
@@ -216,6 +217,10 @@
       REAL*8 qc_fixed
       LOGICAL switchedCE,disrupt
 
+      LOGICAL bbh_select
+      REAL*8 t_merge, m_merge(2)
+      INTEGER k_merge
+
 Cf2py intent(in) kstar
 Cf2py intent(in) mass
 Cf2py intent(in) tb
@@ -254,6 +259,16 @@ Cf2py intent(out) kick_info_out
 *
 
 *      CE2flag = 0
+
+*
+* Get merger type from julia call
+*
+      if(bbh_select)then
+         k_merge = 14
+      else
+         k_merge = 13
+      endif
+
       kstar1_bpp = 0
       kstar2_bpp = 0
 
@@ -1362,6 +1377,11 @@ component.
                sigma = sigmahold !reset sigma after possible ECSN kick dist. Remove this if u want some kick link to the intial pulsar values...
 * set kick values for the bcm array
                if(mass(3-k).lt.0.d0)then
+                  if(kstar(j1).eq.k_merge.and.kstar(j2).eq.k_merge)then
+                     m_merge(1) = mass(j1)
+                     m_merge(2) = mass(j2)
+                     t_merge = tphys
+                  endif
                   if(kstar(3-k).lt.0.d0) mt = mt-mass(3-k) !ignore TZ object
                   if(kw.eq.13.and.mt.gt.mxns) kw = 14
                   CALL CONCATKSTARS(kstar(j1), kstar(j2), mergertype)
@@ -2263,6 +2283,8 @@ component.
          endif
          coel = .true.
          binstate = 1
+
+      endif
          if(mass(j2).gt.0.d0)then
             mass(j1) = 0.d0
             kstar(j1) = 15
@@ -2481,11 +2503,17 @@ component.
          endif
          coel = .true.
          binstate = 1
+
          goto 135
       elseif(kstar(j1).eq.13)then
 *
 * Gamma ray burster?
 *
+         if(kstar(j1).eq.k_merge.and.kstar(j2).eq.k_merge)then
+            m_merge(1) = mass(j1)
+            m_merge(2) = mass(j2)
+            t_merge = tphys
+         endif
          CALL CONCATKSTARS(kstar(j1), kstar(j2), mergertype)
          dm1 = mass(j1)
          mass(j1) = 0.d0
@@ -2495,11 +2523,17 @@ component.
          kstar(j2) = 14
          coel = .true.
          binstate = 1
+
          goto 135
       elseif(kstar(j1).eq.14)then
 *
 * Both stars are black holes.  Let them merge quietly.
 *
+         if(kstar(j1).eq.k_merge.and.kstar(j2).eq.k_merge)then
+            m_merge(1) = mass(j1)
+            m_merge(2) = mass(j2)
+            t_merge = tphys
+         endif
          CALL CONCATKSTARS(kstar(j1), kstar(j2), mergertype)
          dm1 = mass(j1)
          mass(j1) = 0.d0
@@ -3648,6 +3682,7 @@ component.
      &                    bacc(1),bacc(2),tacc(1),tacc(2),epoch(1),
      &                    epoch(2),bhspin(1),bhspin(2))
       endif
+
 *
 * Test whether the primary still fills its Roche lobe.
 *
