@@ -1377,7 +1377,8 @@ component.
                sigma = sigmahold !reset sigma after possible ECSN kick dist. Remove this if u want some kick link to the intial pulsar values...
 * set kick values for the bcm array
                if(mass(3-k).lt.0.d0)then
-                  if(kstar(j1).eq.k_merge.and.kstar(j2).eq.k_merge)then
+                  if(kstar(j1).eq.k_merge.and.
+     &               kstar(j2).eq.k_merge)then
                      m_merge(1) = mass(j1)
                      m_merge(2) = mass(j2)
                      t_merge = tphys
@@ -2284,7 +2285,6 @@ component.
          coel = .true.
          binstate = 1
 
-      endif
          if(mass(j2).gt.0.d0)then
             mass(j1) = 0.d0
             kstar(j1) = 15
