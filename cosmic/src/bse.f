@@ -49,7 +49,6 @@
 
       PARAMETER(yearsc=3.1557d+07)
       CHARACTER*8 label(14)
-      LOGICAL bbh_select
       REAL*8 t_merge, m_merge(2)
 
 *
@@ -148,7 +147,6 @@
       ecc = 0.0
       z = 0.00012
       idum = 50
-      bbh_select = .true.
       t_merge = 0.0
       m_merge(1) = 0.0
       m_merge(2) = 0.0
@@ -227,7 +225,7 @@
      &            menv,renv,ospin,B_0,bacc,tacc,epoch,tms,
      &            bhspin,tphys,zpars,bkick,kick_info,
      &            bpp_index_out,bcm_index_out,kick_info_out,
-     &            bbh_select,t_merge,m_merge)
+     &            t_merge,m_merge)
 
       do i=1,20
          WRITE(*,*)bpp(i,1),bpp(i,2),bpp(i,3),bpp(i,4),bpp(i,5),bpp(i,7)

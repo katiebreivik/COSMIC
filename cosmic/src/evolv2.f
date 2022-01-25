@@ -4,7 +4,7 @@
      \ menv,renv,ospin,B_0,bacc,tacc,epoch,tms,
      \ bhspin,tphys,zpars,bkick,kick_info,
      \ bpp_index_out,bcm_index_out,kick_info_out,
-     \ bbh_select,t_merge,m_merge)
+     \ t_merge,m_merge)
       IMPLICIT NONE
       INCLUDE 'const_bse.h'
       INCLUDE 'checkstate.h'
@@ -217,9 +217,7 @@
       REAL*8 qc_fixed
       LOGICAL switchedCE,disrupt
 
-      LOGICAL bbh_select
       REAL*8 t_merge, m_merge(2)
-      INTEGER k_merge
 
 Cf2py intent(in) kstar
 Cf2py intent(in) mass
@@ -263,11 +261,6 @@ Cf2py intent(out) kick_info_out
 *
 * Get merger type from julia call
 *
-      if(bbh_select)then
-         k_merge = 14
-      else
-         k_merge = 13
-      endif
 
       kstar1_bpp = 0
       kstar2_bpp = 0
@@ -1377,8 +1370,10 @@ component.
                sigma = sigmahold !reset sigma after possible ECSN kick dist. Remove this if u want some kick link to the intial pulsar values...
 * set kick values for the bcm array
                if(mass(3-k).lt.0.d0)then
-                  if(kstar(j1).eq.k_merge.and.
-     &               kstar(j2).eq.k_merge)then
+                  if(kstar(j1).eq.13.and.kstar(j2).eq.13.or.
+     &               kstar(j1).eq.14.and.kstar(j2).eq.13.or.
+     &               kstar(j1).eq.13.and.kstar(j2).eq.14.or.
+     &               kstar(j1).eq.14.and.kstar(j2).eq.14)then
                      m_merge(1) = mass(j1)
                      m_merge(2) = mass(j2)
                      t_merge = tphys
@@ -2509,7 +2504,10 @@ component.
 *
 * Gamma ray burster?
 *
-         if(kstar(j1).eq.k_merge.and.kstar(j2).eq.k_merge)then
+         if(kstar(j1).eq.13.and.kstar(j2).eq.13.or.
+     &      kstar(j1).eq.14.and.kstar(j2).eq.13.or.
+     &      kstar(j1).eq.13.and.kstar(j2).eq.14.or.
+     &      kstar(j1).eq.14.and.kstar(j2).eq.14)then
             m_merge(1) = mass(j1)
             m_merge(2) = mass(j2)
             t_merge = tphys
@@ -2529,13 +2527,12 @@ component.
 *
 * Both stars are black holes.  Let them merge quietly.
 *
-         if(kstar(j1).eq.k_merge.and.kstar(j2).eq.k_merge)then
+         if(kstar(j1).eq.14.and.kstar(j2).eq.14)then
             m_merge(1) = mass(j1)
             m_merge(2) = mass(j2)
             t_merge = tphys
          endif
-         WRITE(*,*)'you should see me bb'
-         WRITE(*,*)t_merge,m_merge,k_merge
+
          CALL CONCATKSTARS(kstar(j1), kstar(j2), mergertype)
          dm1 = mass(j1)
          mass(j1) = 0.d0
@@ -4420,7 +4417,7 @@ component.
       endif
       tb = tb*yeardy
       WRITE(*,*)'okay we are done here'
-      WRITE(*,*)t_merge,m_merge,k_merge
+      WRITE(*,*)t_merge,m_merge
 
       if(jp.ge.1000)then
          WRITE(*,*)' STOP: EVOLV2 ARRAY ERROR '
