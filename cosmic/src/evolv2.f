@@ -4,7 +4,7 @@
      \ menv,renv,ospin,B_0,bacc,tacc,epoch,tms,
      \ bhspin,tphys,zpars,bkick,kick_info,
      \ bpp_index_out,bcm_index_out,kick_info_out,
-     \ t_merge,m_merge)
+     \ t_merge,m_merge,bpp_out)
       IMPLICIT NONE
       INCLUDE 'const_bse.h'
       INCLUDE 'checkstate.h'
@@ -155,7 +155,7 @@
 ***
 *
       INTEGER loop,iter,intpol,k,ip,jp,j1,j2
-      INTEGER bcm_index_out, bpp_index_out
+      INTEGER bcm_index_out, bpp_index_out, kstar1, kstar2
       INTEGER kcomp1,kcomp2,formation(2)
       PARAMETER(loop=20000)
       INTEGER kstar(2),kw,kst,kw1,kw2,kmin,kmax
@@ -217,7 +217,7 @@
       REAL*8 qc_fixed
       LOGICAL switchedCE,disrupt
 
-      REAL*8 t_merge, m_merge(2)
+      REAL*8 t_merge, m_merge(2), bpp_out(1000,43)
 
 Cf2py intent(in) kstar
 Cf2py intent(in) mass
@@ -247,6 +247,7 @@ Cf2py intent(in) kick_info
 Cf2py intent(out) bpp_index_out
 Cf2py intent(out) bcm_index_out
 Cf2py intent(out) kick_info_out
+Cf2py intent(out) bpp_out
 
       if(using_cmc.eq.0)then
               CALL instar
@@ -1535,6 +1536,7 @@ component.
             rol(k) = 10000.d0*rad(k)
  508     continue
       endif
+      
 *
       if((tphys.lt.tiny.and.ABS(dtm).lt.tiny.and.
      &    (mass2i.lt.0.1d0.or..not.sgl)).or.snova)then
@@ -4055,6 +4057,7 @@ component.
  135  continue
 *
       sgl = .true.
+      
       if(kstar(1).eq.13.and.mergemsp.eq.1.and.
      &   notamerger.eq.0)then
          s = (twopi*yearsc)/ospin(1)
@@ -4416,8 +4419,7 @@ component.
          tb = -1.d0
       endif
       tb = tb*yeardy
-      WRITE(*,*)'okay we are done here'
-      WRITE(*,*)t_merge,m_merge
+*      WRITE(*,*)t_merge,m_merge
 
       if(jp.ge.1000)then
          WRITE(*,*)' STOP: EVOLV2 ARRAY ERROR '
@@ -4439,6 +4441,7 @@ component.
           bcm_index_out = ip
           bpp_index_out = jp
           kick_info_out = kick_info
+          bpp_out = bpp
       endif
 *
 
