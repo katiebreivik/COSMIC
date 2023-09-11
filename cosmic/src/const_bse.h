@@ -27,7 +27,7 @@
       REAL*8 eddfac,gamma
       COMMON /WINDVARS/ neta,bwind,hewind,beta,xi,acc2,epsnov,
      &                  eddfac,gamma
-      REAL*8 alpha1,lambdaf
+      REAL*8 alpha1(2),lambdaf
       REAL*8 qcrit_array(16)
       COMMON /CEVARS/ qcrit_array,alpha1,lambdaf
       REAL*8 bconst,CK

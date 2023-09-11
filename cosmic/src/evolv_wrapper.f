@@ -1,5 +1,5 @@
       
-      SUBROUTINE evolv2_global(z,zpars,acc_lim1,q2,natal_kick)
+      SUBROUTINE evolv2_global(z,zpars,acclim,alpha1_in,q2,natal_kick)
       
       implicit none
       INCLUDE 'const_bse.h'
@@ -10,9 +10,9 @@
       REAL*8 epoch(2),tms(2),tphys,tphysf,dtp,aj
       REAL*8 rad(2),lum(2),ospin(2),kick_info_out(2,17)
       REAL*8 massc(2),radc(2),menv(2),renv(2),bhspin(2)
-      REAL*8 tb,ecc,yearsc,bkick(20)
+      REAL*8 tb,ecc,yearsc,bkick(20),alpha1_in(2)
       REAL*8 B_0(2),bacc(2),tacc(2),xip,xihold
-      REAL*8 acc_lim1,q2
+      REAL*8 acclim,q2
       REAL*8 natal_kick(2,5)
 
       PARAMETER(yearsc=3.1557d+07)
@@ -30,7 +30,6 @@
       beta = -1
       xi = 0.5
       acc2 = 1.5
-      alpha1 = 0.0
       lambdaf = 0.0
       ceflag = 1
       cekickflag = 2
@@ -57,7 +56,7 @@
       eddfac = 1
       gamma = -2.0
       don_lim = -1
-      acc_lim = -1
+      acclim = -1
       tflag = 1
       ST_tide = 1
       ifflag = 0
@@ -81,6 +80,9 @@
             natal_kick_array(j,i) = natal_kick(j,i)
          enddo
       enddo
+      alpha1(1) = alpha1_in(1)
+      alpha1(2) = alpha1_in(2)
+
 
       do j=1,16
          qcrit_array(j) = 0.d0
