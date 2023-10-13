@@ -99,7 +99,6 @@
 * current age, initial mass and spin rate, 
 * otherwise the star will start on the ZAMS.
 *
-<<<<<<< HEAD
 
 ***KB MODIFIED PARAMS.INI to params_fortran.in to read in flags
       OPEN(22,file='params_fortran.in', status='old')
@@ -121,23 +120,6 @@
 
 
 ** For now let's hardcode the masses and orbital periods
-=======
-      OPEN(22,file='binary.in', status='old')
-      READ(22,*)mass0(1),mass0(2),tphysf,tb,kstar(1),kstar(2),z,ecc
-      READ(22,*)neta,bwind,hewind,alpha1,lambda,windflag,rtmsflag
-      READ(22,*)ceflag,tflag,ifflag,wdflag,bhflag,remnantflag,mxns,idum
-      READ(22,*)pts1,pts2,pts3
-      READ(22,*)sigma,beta,xi,acc2,epsnov,eddfac,gamma
-      if(kstar(1).lt.0.or.kstar(2).lt.0)then
-         READ(22,*)tphys
-         READ(22,*)aj,mass(1),ospin(1)
-         epoch(1) = tphys - aj
-         kstar(1) = ABS(kstar(1))
-         READ(22,*)aj,mass(2),ospin(2)
-         epoch(2) = tphys - aj
-         kstar(2) = ABS(kstar(2))
-      else
->>>>>>> upstream/develop
 *
 * Initialize the parameters.
 * Set the initial spin of the stars. If ospin is zero (actually < 0.001)

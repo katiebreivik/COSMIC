@@ -85,19 +85,11 @@ c-------------------------------------------------------------c
 * initial mass, current mass, type, current time & epoch,
 * otherwise the star will start on the ZAMS.
 *
-<<<<<<< HEAD
-*      OPEN(22,file='evolve.in',status='old')
-*      READ(22,*)mass,z,tphysf
-*      READ(22,*)neta,bwind,hewind,sigma,windflag
-*      READ(22,*)ifflag,wdflag,bhflag,remnantflag,mxns,idum
-*      READ(22,*)pts1,pts2,pts3
-=======
       OPEN(22,file='evolve.in',status='old')
       READ(22,*)mass,z,tphysf
       READ(22,*)neta,bwind,hewind,sigma,windflag
       READ(22,*)ifflag,wdflag,bhflag,rtmsflag,remnantflag,mxns,idum
       READ(22,*)pts1,pts2,pts3
->>>>>>> upstream/develop
 *
 ************************************************************************
 *
