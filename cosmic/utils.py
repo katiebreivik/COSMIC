@@ -1204,12 +1204,13 @@ def error_check(BSEDict, filters=None, convergence=None, sampling=None):
 
     flag = "alpha1"
     if flag in BSEDict.keys():
-        if BSEDict[flag] <= 0:
-            raise ValueError(
-                "'{0:s}' needs to be greater than 0 (you set it to '{1:0.2f}')".format(
-                    flag, BSEDict[flag]
+        for f in BSEDict[flag]:
+            if f <= 0:
+                raise ValueError(
+                    "'{0:s}' needs to be greater than 0 (you set it to '{1:0.2f}')".format(
+                        flag, BSEDict[flag]
+                    )
                 )
-            )
     flag = "lambdaf"
     # --- all numbers are valid
     flag = "ceflag"

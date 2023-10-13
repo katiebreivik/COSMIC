@@ -249,6 +249,8 @@ Cf2py intent(out) bpp_index_out
 Cf2py intent(out) bcm_index_out
 Cf2py intent(out) kick_info_out
 Cf2py intent(out) bpp_out
+Cf2py intent(out) t_merge
+Cf2py intent(out) m_merge
 
       if(using_cmc.eq.0)then
               CALL instar
