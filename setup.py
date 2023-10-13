@@ -24,16 +24,10 @@ from __future__ import print_function
 
 import glob
 import os.path
-import versioneer
 import sys
 
 from setuptools import find_packages
 from distutils.command.sdist import sdist
-
-try:
-    from numpy.distutils.core import setup, Extension
-except ImportError:
-    raise ImportError("Building fortran extensions requires numpy.")
 
 # set basic metadata
 PACKAGENAME = "cosmic"
@@ -45,9 +39,15 @@ LICENSE = "GPLv3"
 cmdclass = {}
 
 # -- versioning ---------------------------------------------------------------
-
-__version__ = versioneer.get_version()
-cmdclass.update(versioneer.get_cmdclass())
+import re
+VERSIONFILE = "cosmic/_version.py"
+verstrline = open(VERSIONFILE, "rt").read()
+VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
+mo = re.search(VSRE, verstrline, re.M)
+if mo:
+    verstr = mo.group(1)
+else:
+    raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE,))
 
 # -- documentation ------------------------------------------------------------
 
@@ -78,17 +78,17 @@ if 'test' in sys.argv:
     ])
 
 install_requires = [
-    'numpy >= 1.16, <=1.18.4 ; python_version == \'3.6\'',
-    'numpy >= 1.16 ; python_version > \'3.6\'',
     'scipy >= 0.12.1',
+    'numpy >= 1.16',
     'astropy >= 1.1.1',
     'configparser',
     'tqdm >= 4.0',
-    'pandas >= 0.24',
+    'pandas >= 2.0.0',
     'tables > 3.5.0',
     'h5py >= 1.3',
     'schwimmbad >= 0.3.1',
-    'matplotlib >= 2.0.0'
+    'matplotlib >= 2.0.0',
+    'importlib-metadata < 5.0'
 ]
 tests_require = [
     'pytest'
@@ -105,6 +105,10 @@ extras_require = {
     ],
 }
 
+try:
+    from numpy.distutils.core import setup, Extension
+except ImportError:
+    raise ImportError("Building fortran extensions requires numpy.")
 # fortran compile
 wrapper = Extension(
     "cosmic._evolvebin",
@@ -130,9 +134,11 @@ wrapper = Extension(
         "cosmic/src/comprad.f",
         "cosmic/src/bpp_array.f",
         "cosmic/src/checkstate.f",
-    ],
-)  # extra_compile_args = ["-g","-O0"], extra_f77_compile_args=["-O0"], extra_f90_compile_args=["-O0"])
+        "cosmic/src/assign_remnant.f",
+        "cosmic/src/hrdiag_remnant.f",
 
+#    ], extra_compile_args = ["-g","-O0"], extra_f77_compile_args=["-O0"], extra_f90_compile_args=["-O0"])
+])
 # -- run setup ----------------------------------------------------------------
 
 packagenames = find_packages()
@@ -140,7 +146,7 @@ scripts = glob.glob(os.path.join("bin", "*"))
 
 setup(name=DISTNAME,
       provides=[PACKAGENAME],
-      version=__version__,
+      version=verstr,
       description="Compact Object Synthesis and Monte Carlo Investigation Code",
       long_description=long_description,
       long_description_content_type='text/markdown',
@@ -157,14 +163,14 @@ setup(name=DISTNAME,
       install_requires=install_requires,
       tests_require=tests_require,
       extras_require=extras_require,
-      python_requires='>3.5, <4',
-      use_2to3=False,
+      python_requires='>3.6, <4',
       classifiers=[
           'Development Status :: 4 - Beta',
           'Programming Language :: Python',
-          'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
+          'Programming Language :: Python :: 3.9',
+          'Programming Language :: Python :: 3.10',
           'Intended Audience :: Science/Research',
           'Intended Audience :: End Users/Desktop',
           'Intended Audience :: Science/Research',

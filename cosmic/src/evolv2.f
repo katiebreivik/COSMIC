@@ -186,6 +186,7 @@
       REAL*8 bhspin(2)
       REAL*8 delet,delet1,dspint(2),djspint(2),djtx(2)
       REAL*8 dtj,djorb,djgr,djmb,djt,djtt,rmin,rdisk
+      REAL*8 etaBH,maxspinBH
 *
       INTEGER pulsar
       INTEGER mergemsp,merge_mem,notamerger,binstate,mergertype
@@ -278,6 +279,8 @@ Cf2py intent(out) bpp_out
       ngtv = -1.d0
       ngtv2 = -2.d0
       twopi = 2.d0*ACOS(-1.d0)
+
+      Mbh_initial = 0.d0
 
 
 * disrupt tracks if system get disrupted by a SN during the common
@@ -514,8 +517,6 @@ component.
 *
  5    kw1 = kstar(1)
       kw2 = kstar(2)
-*      WRITE(*,*)iter,dt,dtm,dtmi
-
 *
       dt = 1.0d+06*dtm
       eqspin = 0.d0
@@ -533,15 +534,27 @@ component.
 * Just in case the wind mass loss rates are *very* high
 *
             dme = 2.08d-03*eddfac*(1.d0/(1.d0 + zpars(11)))*rad(3-k)
+* For BHs, follow Marchant et al. 2017
+            if(kstar(3-k).eq.14)then
+               maxspinBH = 6.d0**(1.d0/2.d0) * Mbh_initial
+               if(mass(3-k).lt.maxspinBH)then
+                  etaBH = 1.d0 -
+     &    (1.d0 - (mass(3-k)/(3.d0*Mbh_initial))**(2.d0))**(1.d0/2.d0)
+               else
+                  etaBH = 0.42
+               endif
+               dme = 1.04e-3*eddfac*(1.d0/(1.d0 + zpars(11)))
+     &    *(1.d0/etaBH)*rad(3-k)
+            endif
 
 *
 * Calculate wind mass loss from the previous timestep.
 *
-            if(neta.gt.tiny)then
+            !check for kstar added by PA
+            if(neta.gt.tiny .and. kstar(k)<15)then
                rlperi = rol(k)*(1.d0-ecc)
                dmr(k) = mlwind(kstar(k),lumin(k),rad(k),mass(k),
      &                         massc(k),rlperi,z)
-
 *
 * Calculate how much of wind mass loss from companion will be
 * accreted (Boffin & Jorissen, A&A 1988, 205, 155).
@@ -589,7 +602,8 @@ component.
 *
 * Diagnostic for Symbiotic-type stars.
 *
-         if(neta.gt.tiny)then
+         !check for kstar added by PA
+         if(neta.gt.tiny .and. kstar(j2)<15)then
             lacc = 3.14d+07*mass(j2)*dmt(j2)/rad(j2)
             lacc = lacc/lumin(j1)
          endif
@@ -847,7 +861,8 @@ component.
      &                 (3.d0*lumin(k)))**(1.d0/3.d0)
                   ttid = twopi/(1.0d-10 + ABS(oorb - ospin(k)))
                   f = MIN(1.d0,(ttid/(2.d0*tc))**2)
-                  tcqr = fprimc_array(kstar(k))*
+                  !kstar(k) to kstar(k)+1 by PA for kstar(k)=0
+                  tcqr = fprimc_array(kstar(k)+1)*
      &                 f*q(3-k)*raa6*menv(k)/
      &                 (tc*mass(k))
                   rg2 = (k2str(k)*(mass(k)-massc(k)))/mass(k)
@@ -901,7 +916,8 @@ component.
 *
       elseif(ABS(dtm).gt.tiny.and.sgl)then
          do 503 , k = kmin,kmax
-            if(neta.gt.tiny)then
+            !check for kstar added by PA
+            if(neta.gt.tiny .and. kstar(k)<15)then
                rlperi = 0.d0
                dmr(k) = mlwind(kstar(k),lumin(k),rad(k),mass(k),
      &                         massc(k),rlperi,z)
@@ -1416,11 +1432,26 @@ component.
             mass0(k) = m0
             epoch(k) = tphys - age
          endif
+
 *
 *
 * Force new NS or BH to have a birth spin peirod and magnetic field.
 *
          if(kstar(k).eq.13.or.kstar(k).eq.14)then
+* re-calculate the Eddington limit of the newly formed CO
+            dme = 2.08d-03*eddfac*(1.d0/(1.d0 + zpars(11)))*rad(k)
+* For BHs, follow Marchant et al. 2017
+            if(kstar(k).eq.14)then
+               maxspinBH = 6.d0**(1.d0/2.d0) * Mbh_initial
+               if(mass(k).lt.maxspinBH)then
+                  etaBH = 1.d0 -
+     &    (1.d0 - (mass(k)/(3.d0*Mbh_initial))**(2.d0))**(1.d0/2.d0)
+               else
+                  etaBH = 0.42
+               endif
+               dme = 1.04e-3*eddfac*(1.d0/(1.d0 + zpars(11)))
+     &    *(1.d0/etaBH)*rad(k)
+            endif
             if(tphys-epoch(k).lt.tiny)then
                if(kstar(k).eq.13.and.pulsar.gt.0)then
 *                  write(93,*)'birth start: ',tphys,k,B_0(k),ospin(k)
@@ -1922,6 +1953,19 @@ component.
 * Eddington limit for accretion on to the secondary in one orbit.
 *
  8    dme = 2.08d-03*eddfac*(1.d0/(1.d0 + zpars(11)))*rad(j2)*tb
+* For BHs, follow Marchant et al. 2017
+      if(kstar(j2).eq.14)then
+         maxspinBH = 6.d0**(1.d0/2.d0) * Mbh_initial
+         if(mass(j2).lt.maxspinBH)then
+            etaBH = 1.d0 -
+     &    (1.d0 - (mass(j2)/(3.d0*Mbh_initial))**(2.d0))**(1.d0/2.d0)
+         else
+            etaBH = 0.42
+         endif
+         dme = 1.04e-3*eddfac*(1.d0/(1.d0 + zpars(11)))
+     &    *(1.d0/etaBH)*rad(j2)*tb
+      endif
+
       supedd = .false.
       novae = .false.
       disk = .false.
@@ -2205,18 +2249,17 @@ component.
 
       if((kstar(j1).le.1.or.kstar(j1).eq.7).and.q(j1).gt.qc)then
 *
-* This will be dynamical mass transfer of a similar nature to
-* common-envelope evolution.  The result is always a single
-* star placed in *2.
+* KB 20 jul 23: This will lead to a merger of the two MS stars.
+* The result is always a single star placed in *2.
 *
          CALL CONCATKSTARS(kstar(j1), kstar(j2), mergertype)
          taum = SQRT(tkh(j1)*tdyn)
          dm1 = mass(j1)
          if(kstar(j2).le.1)then
 *
-* Restrict accretion to thermal timescale of secondary.
+* Assume perfect accretion efficiency
 *
-            dm2 = taum/tkh(j2)*dm1
+            dm2 = dm1
             mass(j2) = mass(j2) + dm2
 *
 * Rejuvenate if the star is still on the main sequence.
@@ -2644,8 +2687,21 @@ component.
 * Just in case the wind mass loss rates are *very* high
 *
             dme = 2.08d-03*eddfac*(1.d0/(1.d0 + zpars(11)))*rad(3-k)*tb
+* For BHs, follow Marchant et al. 2017
+            if(kstar(3-k).eq.14)then
+               maxspinBH = 6.d0**(1.d0/2.d0) * Mbh_initial
+               if(mass(3-k).lt.maxspinBH)then
+                  etaBH = 1.d0 -
+     &    (1.d0 - (mass(3-k)/(3.d0*Mbh_initial))**(2.d0))**(1.d0/2.d0)
+               else
+                  etaBH = 0.42
+               endif
+               dme = 1.04e-3*eddfac*(1.d0/(1.d0 + zpars(11)))
+     &    *(1.d0/etaBH)*rad(3-k)*tb
+            endif
 
-            if(neta.gt.tiny)then
+            !check for kstar added by PA
+            if(neta.gt.tiny .and. kstar(k)<15)then
                if(beta.lt.0.d0)then !PK. following startrack
                   beta = 0.125
                   if(kstar(k).le.1)then
@@ -2945,6 +3001,7 @@ component.
          dm2 = km*dm2
          dm22 = km*dm22
          dme = km*dme
+
 *
 * Calculate orbital angular momentum change due to system mass loss.
 *
@@ -3261,7 +3318,8 @@ component.
      &                 (3.d0*lumin(k)))**(1.d0/3.d0)
                   ttid = twopi/(1.0d-10 + ABS(oorb - ospin(k)))
                   f = MIN(1.d0,(ttid/(2.d0*tc))**2)
-                  tcqr = fprimc_array(kstar(k))*
+                  !kstar(k) to kstar(k)+1 by PA for kstar(k)=0
+                  tcqr = fprimc_array(kstar(k)+1)*
      &                 f*q(3-k)*raa6*menv(k)/
      &                 (tc*mass(k))
                   rg2 = (k2str(k)*(mass(k)-massc(k)))/mass(k)
@@ -3905,8 +3963,8 @@ component.
      &                 epoch(2),bhspin(1),bhspin(2))
          CALL comenv(mass0(j2),mass(j2),massc(j2),aj(j2),jspin(j2),
      &               kstar(j2),mass0(j1),mass(j1),massc(j1),aj(j1),
-     &               jspin(j1),kstar(j1),zpars,ecc,sep,jorb,coel,j1,j2,
-     &               vk,kick_info,formation(j1),formation(j2),sigmahold,
+     &               jspin(j1),kstar(j1),zpars,ecc,sep,jorb,coel,j2,j1,
+     &               vk,kick_info,formation(j2),formation(j1),sigmahold,
      &               bhspin(j2),bhspin(j1),binstate,mergertype,
      &               jp,tphys,switchedCE,rad,tms,evolve_type,disrupt,
      &               lumin,B_0,bacc,tacc,epoch,menv,renv,bkick)
@@ -4078,8 +4136,12 @@ component.
          else
             mass1_bpp = mass(1)
             mass2_bpp = mass(2)
-            if(kstar(1).eq.15) mass1_bpp = mass0(1)
-            if(kstar(2).eq.15) mass2_bpp = mass0(2)
+*
+* KB remove these 20 jul 23: we want the stars to not have mass
+* if they are kstar=15
+*
+*            if(kstar(1).eq.15) mass1_bpp = mass0(1)
+*            if(kstar(2).eq.15) mass2_bpp = mass0(2)
             if(coel)then
                 evolve_type = 6.0
                 teff1 = 1000.d0*((1130.d0*lumin(1)/
@@ -4228,14 +4290,52 @@ component.
           mass1_bpp = mass(1)
           mass2_bpp = mass(2)
 
-          if(kstar(1).eq.15.and.bpp(jp,4).lt.15.0)then
-              mass1_bpp = mass0(1)
-          endif
+          !added by PA for systems that manage to reach here
+          !without encountering write bpp at all
+          if (jp<1) then
+              evolve_type = 1.d0
+              rrl1 = rad(1)/rol(1)
+              rrl2 = rad(2)/rol(2)
+              teff1 = 1000.d0*((1130.d0*lumin(1)/
+     &                       (rad(1)**2.d0))**(1.d0/4.d0))
+              teff2 = 1000.d0*((1130.d0*lumin(2)/
+     &                       (rad(2)**2.d0))**(1.d0/4.d0))
+              if(B_0(1).eq.0.d0)then !PK.
+                 b01_bcm = 0.d0
+              elseif(B_0(1).gt.0.d0.and.B(1).eq.0.d0)then
+                 b01_bcm = B_0(1)
+              else
+                 b01_bcm = B(1)
+              endif
+              if(B_0(2).eq.0.d0)then
+                 b02_bcm = 0.d0
+              elseif(B_0(2).gt.0.d0.and.B(2).eq.0.d0)then
+                 b02_bcm = B_0(2)
+              else
+                 b02_bcm = B(2)
+              endif
 
-          if(kstar(2).eq.15.and.bpp(jp,5).lt.15.0)then
-              mass2_bpp = mass0(2)
+              CALL writebpp(jp,tphys,evolve_type,
+     &                  mass(1),mass(2),kstar(1),kstar(2),sep,
+     &                  tb,ecc,rrl1,rrl2,
+     &                  aj(1),aj(2),tms(1),tms(2),
+     &                  massc(1),massc(2),rad(1),rad(2),
+     &                  mass0(1),mass0(2),lumin(1),lumin(2),
+     &                  teff1,teff2,radc(1),radc(2),
+     &                  menv(1),menv(2),renv(1),renv(2),
+     &                  ospin(1),ospin(2),b01_bcm,b02_bcm,
+     &                  bacc(1),bacc(2),tacc(1),tacc(2),epoch(1),
+     &                  epoch(2),bhspin(1),bhspin(2))
           endif
+          
+*          if(kstar(1).eq.15.and.bpp(jp,4).lt.15.0)then
+*              mass1_bpp = mass0(1)
+*          endif
 
+*          if(kstar(2).eq.15.and.bpp(jp,5).lt.15.0)then
+*              mass2_bpp = mass0(2)
+*          endif
+          
           if(coel)then
               evolve_type = 6.0
               teff1 = 1000.d0*((1130.d0*lumin(1)/
@@ -4306,6 +4406,8 @@ component.
      &                      epoch(2),bhspin(1),bhspin(2))
           else
               evolve_type = 10.0
+              !added by PA for systems that stop evolving halfway
+              if(iter.ge.loop) evolve_type = 100.0
               rrl1 = rad(1)/rol(1)
               rrl2 = rad(2)/rol(2)
               teff1 = 1000.d0*((1130.d0*lumin(1)/
@@ -4406,7 +4508,6 @@ component.
  145        continue
          endif
 *
-
       elseif((kstar(1).eq.15.and.kstar(2).eq.15))then
          tphys = tphysf
          evolve_type = 10.0

@@ -8,22 +8,12 @@
       real*8 MLalpha
       external MLalpha
       parameter(lum0=7.0d+04,kap=-0.5d0)
-
-      character*30 label(16)
-      data label /' Low Mass MS Star ',' Main sequence Star ',
-     &            ' Hertzsprung Gap ',' Giant Branch ',
-     &            ' Core Helium Burning ',
-     &            ' First AGB ',' Second AGB ',
-     &            ' Naked Helium MS ',' Naked Helium HG ',
-     &            ' Naked Helium GB ',' Helium WD ',
-     &            ' Carbon/Oxygen WD ',' Oxygen/Neon WD ',
-     &            ' Neutron Star ',' Black Hole ',
-     &            ' Massless Supernova '/
 *
 *      windflag = 0 !BSE=0, startrack08=1, vink=2, vink+LBV for all
 *      stars=3.
 * Must be one of these values or mlwind will cause problem with code,
 * i.e. mlwind not set (see last line of main if statement...).
+    
       if(windflag.eq.0)then
 * BSE
 *
@@ -185,15 +175,15 @@
      &            alpha*LOG10(z/zsun) + 1.07d0*LOG10(teff/2.0d+04)
             dms = 10.d0**dms
             testflag = 2
-         elseif(teff.gt.25000.and.teff.le.50000)then
-            if(eddlimflag.eq.0) alpha = 0.85d0
-            if(eddlimflag.eq.1) alpha = MLalpha(mt,lum,kw)
-            dms = -6.697d0 + 2.194d0*LOG10(lum/1.0d+05) -
+         elseif(teff.gt.25000.)then
+*        Although Vink et al. formulae  are only defined until Teff=50000K,
+*        we follow the Dutch prescription of MESA, and extend to higher Teff
+             dms = -6.697d0 + 2.194d0*LOG10(lum/1.0d+05) -
      &            1.313d0*LOG10(mt/30.d0) - 1.226d0*LOG10(2.6d0/2.d0) +
      &            alpha*LOG10(z/zsun) +0.933d0*LOG10(teff/4.0d+04) -
      &            10.92d0*(LOG10(teff/4.0d+04)**2)
-            dms = 10.d0**dms
-            testflag = 2
+       dms = 10.d0**dms
+       testflag = 2
          endif
 
          if((windflag.eq.3.or.kw.ge.2).and.kw.le.6)then
@@ -218,17 +208,6 @@
 *
          mlwind = dms
       endif
-*
-*         if(mt.gt.50.and.testflag.eq.1) then
-*         write(*,*) 'Nieuwenhuijzen Winds, ',
-*     &         tphys,label(kw),mt,mc,r,teff,dms
-*         elseif(mt.gt.50.and.testflag.eq.2) then
-*         write(*,*) 'Vink Winds, ', label(kw),tphys,mt,mc,r,teff,dms
-*         elseif(mt.gt.50.and.testflag.eq.3) then
-*         write(*,*) 'LBV Winds, ', label(kw),tphys,mt,mc,r,teff,dms
-*         elseif(mt.gt.50.and.testflag.eq.4) then
-*         write(*,*) 'WR Winds, ', label(kw),tphys,mt,mc,r,teff,dms
-*         endif
 
       return
       end
