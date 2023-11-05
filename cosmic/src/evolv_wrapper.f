@@ -1,5 +1,5 @@
       
-      SUBROUTINE evolv2_global(z,zpars,acclim,alpha1_in,q2,natal_kick)
+      SUBROUTINE evolv2_global(z,zpars,acclim,alphain,qHG,qGB,kick_in)
       
       implicit none
       INCLUDE 'const_bse.h'
@@ -10,10 +10,10 @@
       REAL*8 epoch(2),tms(2),tphys,tphysf,dtp,aj
       REAL*8 rad(2),lum(2),ospin(2),kick_info_out(2,17)
       REAL*8 massc(2),radc(2),menv(2),renv(2),bhspin(2)
-      REAL*8 tb,ecc,yearsc,bkick(20),alpha1_in(2)
+      REAL*8 tb,ecc,yearsc,bkick(20),alphain(2)
       REAL*8 B_0(2),bacc(2),tacc(2),xip,xihold
-      REAL*8 acclim,q2
-      REAL*8 natal_kick(2,5)
+      REAL*8 acclim,qHG,qGB
+      REAL*8 kick_in(2,5)
 
       PARAMETER(yearsc=3.1557d+07)
       
@@ -56,7 +56,7 @@
       eddfac = 1
       gamma = -2.0
       don_lim = -1
-      acclim = -1
+      acc_lim = acclim
       tflag = 1
       ST_tide = 1
       ifflag = 0
@@ -77,18 +77,20 @@
             kick_info(j,i) = 0.d0
          enddo
          do i=1,5
-            natal_kick_array(j,i) = natal_kick(j,i)
+            natal_kick_array(j,i) = kick_in(j,i)
          enddo
       enddo
-      alpha1(1) = alpha1_in(1)
-      alpha1(2) = alpha1_in(2)
+      alpha1(1) = alphain(1)
+      alpha1(2) = alphain(2)
 
 
       do j=1,16
          qcrit_array(j) = 0.d0
          fprimc_array(j) = 2.0/21.0
-      enddo
-      qcrit_array(2) = q2
+      enddo      
+*     Fortran indexes from 1, HG is kstar=2, GB is kstar=3
+      qcrit_array(3) = qHG
+      qcrit_array(4) = qGB
       
       CALL zcnsts(z,zpars)
       CALL instar
