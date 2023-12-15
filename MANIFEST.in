@@ -1,3 +1,4 @@
 include versioneer.py
 include cosmic/_version.py
 include LICENSE README.md MANIFEST.in
+include pyproject.toml
