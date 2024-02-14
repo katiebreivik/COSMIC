@@ -14,7 +14,7 @@
      &               qcflag,eddlimflag,bhspinflag,aic,rejuvflag,
      &               htpmb,ST_cr,ST_tide,bdecayfac,grflag,
      &               bhms_coll_flag, rtmsflag
-      REAL*8 don_lim,acc_lim,Mbh_initial
+      REAL*8 don_lim,acc_lim(2),Mbh_initial
       COMMON /MTVARS/ don_lim,acc_lim,Mbh_initial
       INTEGER ceflag,cekickflag,cemergeflag,cehestarflag,ussn
       COMMON /CEFLAGS/ ceflag,cekickflag,cemergeflag,cehestarflag,ussn

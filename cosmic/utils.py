@@ -1569,13 +1569,14 @@ def error_check(BSEDict, filters=None, convergence=None, sampling=None):
             )
     flag = "acc_lim"
     if flag in BSEDict.keys():
-        if BSEDict[flag] not in [-1, -2, -3, -4]:
-            if BSEDict[flag] < 0.0:
-                raise ValueError(
-                    "'{0:s}' needs to be set to -1, -2, -3, -4 or be >=0 (you set it to '{1:0.2f}')".format(
-                        flag, BSEDict[flag]
+        for f in BSEDict[flag]:
+            if f not in [-1, -2, -3, -4]:
+                if f < 0.0:
+                    raise ValueError(
+                        "'{0:s}' needs to be set to -1, -2, -3, -4 or be >=0 (you set it to '{1:0.2f}')".format(
+                            flag, BSEDict[flag]
+                        )
                     )
-                )
 
     return
 
