@@ -12,7 +12,7 @@
       REAL*8 massc(2),radc(2),menv(2),renv(2),bhspin(2)
       REAL*8 tb,ecc,yearsc,bkick(20),alphain(2)
       REAL*8 B_0(2),bacc(2),tacc(2),xip,xihold
-      REAL*8 acclim,qHG,qGB
+      REAL*8 acclim(2),qHG,qGB
       REAL*8 kick_in(2,5)
 
       PARAMETER(yearsc=3.1557d+07)
