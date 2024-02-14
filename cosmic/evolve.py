@@ -331,8 +331,7 @@ class Evolve(object):
             initialbinarytable = initialbinarytable.assign(fprimc_array=initialbinarytable[FPRIMC_COLUMNS].values.tolist())
 
         if (pd.Series(ALPHA_COLUMNS).isin(initialbinarytable.keys()).all()) and ('alpha1' not in BSEDict):
-            initialbinarytable = initialbinarytable.assign(alpha=initialbinarytable[ALPHA_COLUMNS].values.tolist())
-
+            initialbinarytable = initialbinarytable.assign(alpha1=initialbinarytable[ALPHA_COLUMNS].values.tolist())
         
         # need to ensure that the order of parameters that we pass to BSE
         # is correct
