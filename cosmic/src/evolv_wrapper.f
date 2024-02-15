@@ -17,8 +17,10 @@
 
       PARAMETER(yearsc=3.1557d+07)
       
+*     Some flags will not be allowed to vary, these are in the list below
+*     I think we actually can just leave these set by the BSEDict as we would normally.  
       dtp = 0.0
-      pts1 = 0.05
+      pts1 = 0.05 
       pts2 = 0.01
       pts3 = 0.02
       zsun = 0.014
@@ -30,15 +32,14 @@
       beta = -1
       xi = 0.5
       acc2 = 1.5
-      lambdaf = 0.0
       ceflag = 1
       cekickflag = 2
       cemergeflag = 1
-      cehestarflag = 0
       qcflag = 5
       kickflag = 0
-      sigma = 0.0
+      cehestarflag = 0
       bhflag = 1
+      sigma = 0.0
       bhsigmafrac = 1.0
       sigmadiv = -20.0
       ecsn = 2.25
@@ -46,7 +47,6 @@
       aic = 1
       ussn = 1
       pisn = -2
-      polar_kick_angle = 90.0
       remnantflag = 4
       mxns = 3.0
       rembar_massloss = 0.5
@@ -54,14 +54,12 @@
       bhspinmag = 0.0
       grflag = 1
       eddfac = 1
-      gamma = -2.0
       don_lim = -1
-      acc_lim = acclim
       tflag = 1
       ST_tide = 1
       ifflag = 0
-      wdflag = 1
       epsnov = 0.001
+      wdflag = 1
       bdecayfac = 1
       bconst = 3000
       ck = 1000
@@ -71,6 +69,12 @@
       htpmb = 1
       ST_cr = 1
 
+* These flags might want to vary
+      lambdaf = 0.0
+      gamma = -2.0
+      polar_kick_angle = 90.0
+      acc_lim = acclim
+*not sure why this idum is here...
       idum = 50
       do j=1,2
          do i=1,12
