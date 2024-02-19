@@ -1,5 +1,5 @@
       
-      SUBROUTINE evolv2_global(z,zpars,acclim,alphain,qHG,qGB,kick_in)
+      SUBROUTINE evolv2_global(z,zpars,alphain,lambdain)
       
       implicit none
       INCLUDE 'const_bse.h'
@@ -12,8 +12,8 @@
       REAL*8 massc(2),radc(2),menv(2),renv(2),bhspin(2)
       REAL*8 tb,ecc,yearsc,bkick(20),alphain(2)
       REAL*8 B_0(2),bacc(2),tacc(2),xip,xihold
-      REAL*8 acclim(2),qHG,qGB
-      REAL*8 kick_in(2,5)
+      REAL*8 acclim(2),qAGB,qTPAGB
+      REAL*8 kick_in(2,5), labmdaf, lambdain
 
       PARAMETER(yearsc=3.1557d+07)
       
@@ -70,20 +70,11 @@
       ST_cr = 1
 
 * These flags might want to vary
-      lambdaf = 0.0
+      lambdaf = lambdain
       gamma = -2.0
       polar_kick_angle = 90.0
       acc_lim = acclim
 *not sure why this idum is here...
-      idum = 50
-      do j=1,2
-         do i=1,12
-            kick_info(j,i) = 0.d0
-         enddo
-         do i=1,5
-            natal_kick_array(j,i) = kick_in(j,i)
-         enddo
-      enddo
       alpha1(1) = alphain(1)
       alpha1(2) = alphain(2)
 
@@ -93,9 +84,8 @@
          fprimc_array(j) = 2.0/21.0
       enddo      
 *     Fortran indexes from 1, HG is kstar=2, GB is kstar=3
-      qcrit_array(3) = qHG
-      qcrit_array(4) = qGB
       
+
       CALL zcnsts(z,zpars)
       CALL instar
       CALL zcnsts(z,zpars)
