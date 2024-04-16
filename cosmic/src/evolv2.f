@@ -4,7 +4,7 @@
      \ menv,renv,ospin,B_0,bacc,tacc,epoch,tms,
      \ bhspin,tphys,zpars,bkick,kick_info,
      \ bpp_index_out,bcm_index_out,kick_info_out,
-     \ bpp_out)
+     \ bpp_out,bcm_out)
       IMPLICIT NONE
       INCLUDE 'const_bse.h'
       INCLUDE 'checkstate.h'
@@ -218,7 +218,8 @@
       REAL*8 qc_fixed
       LOGICAL switchedCE,disrupt
 
-      REAL*8 t_merge, m_merge(2), bpp_out(1000,43)
+      REAL*8 t_merge,m_merge(2),bpp_out(1000,43)
+      REAL*8 bcm_out(50000,38)
 
 Cf2py intent(in) kstar
 Cf2py intent(in) mass
@@ -249,8 +250,8 @@ Cf2py intent(out) bpp_index_out
 Cf2py intent(out) bcm_index_out
 Cf2py intent(out) kick_info_out
 Cf2py intent(out) bpp_out
-Cf2py intent(out) t_merge
-Cf2py intent(out) m_merge
+Cf2py intent(out) bcm_out
+
 
       if(using_cmc.eq.0)then
               CALL instar
@@ -4545,6 +4546,7 @@ component.
           bpp_index_out = jp
           kick_info_out = kick_info
           bpp_out = bpp
+          bcm_out = bcm
       endif
 *
 
