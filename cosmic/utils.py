@@ -1204,7 +1204,7 @@ def error_check(BSEDict, filters=None, convergence=None, sampling=None):
 
     flag = "alpha1"
     if flag in BSEDict.keys():
-        if BSEDict[flag] <= 0:
+        if any(x < 0.0 for x in BSEDict[flag]):
             raise ValueError(
                 "'{0:s}' needs to be greater than 0 (you set it to '{1:0.2f}')".format(
                     flag, BSEDict[flag]
@@ -1568,8 +1568,9 @@ def error_check(BSEDict, filters=None, convergence=None, sampling=None):
             )
     flag = "acc_lim"
     if flag in BSEDict.keys():
-        if BSEDict[flag] not in [-1, -2, -3, -4]:
-            if BSEDict[flag] < 0.0:
+        
+        if any(x not in [-1, -1, -2, -3] for x in BSEDict[flag]):
+            if any(x < 0.0 for x in BSEDict[flag]):
                 raise ValueError(
                     "'{0:s}' needs to be set to -1, -2, -3, -4 or be >=0 (you set it to '{1:0.2f}')".format(
                         flag, BSEDict[flag]
