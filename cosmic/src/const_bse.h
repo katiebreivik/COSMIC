@@ -14,8 +14,8 @@
       COMMON /FLAGS/ tflag,ifflag,remnantflag,wdflag,bhflag,windflag,
      &               qcflag,eddlimflag,bhspinflag,aic,rejuvflag,
      &               htpmb,ST_cr,ST_tide,bdecayfac,grflag,
-     &               bhms_coll_flag,wd_mass_lim,rtmsflag
-      REAL*8 don_lim,acc_lim,Mbh_initial
+     &               bhms_coll_flag, wd_mass_lim,rtmsflag
+      REAL*8 don_lim,acc_lim(2),Mbh_initial
       COMMON /MTVARS/ don_lim,acc_lim,Mbh_initial
       INTEGER ceflag,cekickflag,cemergeflag,cehestarflag,ussn
       COMMON /CEFLAGS/ ceflag,cekickflag,cemergeflag,cehestarflag,ussn
@@ -28,7 +28,7 @@
       REAL*8 eddfac,gamma
       COMMON /WINDVARS/ neta,bwind,hewind,beta,xi,acc2,epsnov,
      &                  eddfac,gamma
-      REAL*8 alpha1,lambdaf
+      REAL*8 alpha1(2),lambdaf
       REAL*8 qcrit_array(16)
       COMMON /CEVARS/ qcrit_array,alpha1,lambdaf
       REAL*8 bconst,CK
@@ -53,7 +53,7 @@
       COMMON /POINTS/ pts1,pts2,pts3
       REAL*8 dmmax,drmax
       COMMON /TSTEPC/ dmmax,drmax
-      REAL*8 scm(50000,14),spp(20,3)
+      REAL*8 scm(50000,16),spp(25,20)
       COMMON /SINGLE/ scm,spp
       REAL*8 bcm(50000,38),bpp(1000,43)
       COMMON /BINARY/ bcm,bpp

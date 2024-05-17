@@ -3,7 +3,8 @@
      \ dtp,mass0,rad,lumin,massc,radc,
      \ menv,renv,ospin,B_0,bacc,tacc,epoch,tms,
      \ bhspin,tphys,zpars,bkick,kick_info,
-     \ bpp_index_out,bcm_index_out,kick_info_out)
+     \ bpp_index_out,bcm_index_out,kick_info_out,
+     \ bpp_out,bcm_out)
       IMPLICIT NONE
       INCLUDE 'const_bse.h'
       INCLUDE 'checkstate.h'
@@ -154,7 +155,7 @@
 ***
 *
       INTEGER loop,iter,intpol,k,ip,jp,j1,j2
-      INTEGER bcm_index_out, bpp_index_out
+      INTEGER bcm_index_out, bpp_index_out, kstar1, kstar2
       INTEGER kcomp1,kcomp2,formation(2)
       PARAMETER(loop=20000)
       INTEGER kstar(2),kw,kst,kw1,kw2,kmin,kmax
@@ -217,6 +218,9 @@
       REAL*8 qc_fixed
       LOGICAL switchedCE,disrupt
 
+      REAL*8 t_merge,m_merge(2),bpp_out(1000,43)
+      REAL*8 bcm_out(50000,38)
+
 Cf2py intent(in) kstar
 Cf2py intent(in) mass
 Cf2py intent(in) tb
@@ -245,6 +249,9 @@ Cf2py intent(in) kick_info
 Cf2py intent(out) bpp_index_out
 Cf2py intent(out) bcm_index_out
 Cf2py intent(out) kick_info_out
+Cf2py intent(out) bpp_out
+Cf2py intent(out) bcm_out
+
 
       if(using_cmc.eq.0)then
               CALL instar
@@ -255,6 +262,11 @@ Cf2py intent(out) kick_info_out
 *
 
 *      CE2flag = 0
+
+*
+* Get merger type from julia call
+*
+
       kstar1_bpp = 0
       kstar2_bpp = 0
 
@@ -404,7 +416,7 @@ component.
          if(ospin(1).lt.0.d0) ospin(1) = oorb
          if(ospin(2).lt.0.d0) ospin(2) = oorb
       endif
-*
+
       do 500 , k = kmin,kmax
          age = tphys - epoch(k)
          mc = massc(k)
@@ -446,6 +458,7 @@ component.
          endif
 *
  500  continue
+*
 *
       if(output) write(*,*)'Init:',mass(1),mass(2),massc(1),massc(2),
      & rad(1),rad(2),kstar(1),kstar(2),sep,ospin(1),ospin(2),jspin(1),
@@ -507,12 +520,6 @@ component.
 *
  5    kw1 = kstar(1)
       kw2 = kstar(2)
-
-      if(xi.eq.0)then
-         ospin(1) = 1.0d-10
-         ospin(2) = 1.0d-10
-      endif
-
 *
       dt = 1.0d+06*dtm
       eqspin = 0.d0
@@ -977,7 +984,7 @@ component.
                   djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
                   djspint(k) = djspint(k) + djmb
                endif
-            elseif(htpmb.eq.1)then
+            else
                if(ST_cr.le.0.and.
      &            mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
      &            menv(k).gt.0.0d0)then
@@ -1383,6 +1390,14 @@ component.
                sigma = sigmahold !reset sigma after possible ECSN kick dist. Remove this if u want some kick link to the intial pulsar values...
 * set kick values for the bcm array
                if(mass(3-k).lt.0.d0)then
+                  if(kstar(j1).eq.13.and.kstar(j2).eq.13.or.
+     &               kstar(j1).eq.14.and.kstar(j2).eq.13.or.
+     &               kstar(j1).eq.13.and.kstar(j2).eq.14.or.
+     &               kstar(j1).eq.14.and.kstar(j2).eq.14)then
+                     m_merge(1) = mass(j1)
+                     m_merge(2) = mass(j2)
+                     t_merge = tphys
+                  endif
                   if(kstar(3-k).lt.0.d0) mt = mt-mass(3-k) !ignore TZ object
                   if(kw.eq.13.and.mt.gt.mxns) kw = 14
                   CALL CONCATKSTARS(kstar(j1), kstar(j2), mergertype)
@@ -1555,6 +1570,7 @@ component.
             rol(k) = 10000.d0*rad(k)
  508     continue
       endif
+      
 *
       if((tphys.lt.tiny.and.ABS(dtm).lt.tiny.and.
      &    (mass2i.lt.0.1d0.or..not.sgl)).or.snova)then
@@ -1610,7 +1626,7 @@ component.
      &                      ospin(1),ospin(2),b01_bcm,b02_bcm,
      &                      bacc(1),bacc(2),
      &                      tacc(1),tacc(2),epoch(1),epoch(2),
-     &                      bhspin(1),bhspin(2),teff1,teff2)
+     &                      bhspin(1),bhspin(2))
       endif
 *
       if((isave.and.tphys.ge.tsave).or.iplot)then
@@ -1895,7 +1911,7 @@ component.
      &                      ospin(1),ospin(2),b01_bcm,b02_bcm,
      &                      bacc(1),bacc(2),
      &                      tacc(1),tacc(2),epoch(1),epoch(2),
-     &                      bhspin(1),bhspin(2),teff1,teff2)
+     &                      bhspin(1),bhspin(2))
       endif
 
       if(iplot.and.tphys.gt.tiny)then
@@ -2311,6 +2327,7 @@ component.
          endif
          coel = .true.
          binstate = 1
+
          if(mass(j2).gt.0.d0)then
             mass(j1) = 0.d0
             kstar(j1) = 15
@@ -2475,12 +2492,7 @@ component.
          taum = SQRT(tkh(j1)*tdyn)
          dm1 = mass(j1)
          if(eddfac.lt.10.d0)then
-*           dm2 = MIN(dme*taum/tb,dm1)
-            if(wd_mass_lim.eq.1)then
-               dm2 = MIN(dme*taum/tb,dm1)
-            elseif(wd_mass_lim.eq.1)then
-               dm2 = dm1
-            endif
+            dm2 = MIN(dme*taum/tb,dm1)
             if(dm2.lt.dm1) supedd = .true.
          else
             dm2 = dm1
@@ -2494,7 +2506,7 @@ component.
 *
             kstar(j2) = 15
             mass(j2) = 0.d0
-         elseif(kstar(j1).eq.10.and.kstar(j2).gt.10)then
+         elseif(kstar(j1).eq.10.or.kstar(j2).gt.10)then
 *
 * Should be helium overflowing onto a CO or ONe core in which case the
 * helium swells up to form a giant envelope so a HeGB star is formed.
@@ -2534,11 +2546,20 @@ component.
          endif
          coel = .true.
          binstate = 1
+
          goto 135
       elseif(kstar(j1).eq.13)then
 *
 * Gamma ray burster?
 *
+         if(kstar(j1).eq.13.and.kstar(j2).eq.13.or.
+     &      kstar(j1).eq.14.and.kstar(j2).eq.13.or.
+     &      kstar(j1).eq.13.and.kstar(j2).eq.14.or.
+     &      kstar(j1).eq.14.and.kstar(j2).eq.14)then
+            m_merge(1) = mass(j1)
+            m_merge(2) = mass(j2)
+            t_merge = tphys
+         endif
          CALL CONCATKSTARS(kstar(j1), kstar(j2), mergertype)
          dm1 = mass(j1)
          mass(j1) = 0.d0
@@ -2548,11 +2569,18 @@ component.
          kstar(j2) = 14
          coel = .true.
          binstate = 1
+
          goto 135
       elseif(kstar(j1).eq.14)then
 *
 * Both stars are black holes.  Let them merge quietly.
 *
+         if(kstar(j1).eq.14.and.kstar(j2).eq.14)then
+            m_merge(1) = mass(j1)
+            m_merge(2) = mass(j2)
+            t_merge = tphys
+         endif
+
          CALL CONCATKSTARS(kstar(j1), kstar(j2), mergertype)
          dm1 = mass(j1)
          mass(j1) = 0.d0
@@ -2770,12 +2798,12 @@ component.
 
 
          if(kstar(j2).le.2.or.kstar(j2).eq.4)then
-            if(acc_lim.eq.-1.or.acc_lim.eq.-3)then
+            if(acc_lim(j2).eq.-1.or.acc_lim(j2).eq.-3)then
                dm2 = MIN(1.d0,10.d0*taum/tkh(j2))*dm1
-            elseif(acc_lim.eq.-2.or.acc_lim.eq.-4)then
+            elseif(acc_lim(j2).eq.-2.or.acc_lim(j2).eq.-4)then
                dm2 = MIN(1.d0,taum/tkh(j2))*dm1
-            elseif(acc_lim.ge.0.d0)then
-               dm2 = acc_lim*dm1
+            elseif(acc_lim(j2).ge.0.d0)then
+               dm2 = acc_lim(j2)*dm1
             endif
          elseif(kstar(j2).ge.7.and.kstar(j2).le.9)then
 *
@@ -2783,18 +2811,18 @@ component.
 * or SAGB star unless the primary is also a helium star.
 *
             if(kstar(j1).ge.7)then
-               if(acc_lim.eq.-1.or.acc_lim.eq.-3)then
+               if(acc_lim(j2).eq.-1.or.acc_lim(j2).eq.-3)then
                   dm2 = MIN(1.d0,10.d0*taum/tkh(j2))*dm1
-               elseif(acc_lim.eq.-2.or.acc_lim.eq.-4)then
+               elseif(acc_lim(j2).eq.-2.or.acc_lim(j2).eq.-4)then
                   dm2 = MIN(1.d0,taum/tkh(j2))*dm1
-               elseif(acc_lim.ge.0.d0)then
-                  dm2 = acc_lim*dm1
+               elseif(acc_lim(j2).ge.0.d0)then
+                  dm2 = acc_lim(j2)*dm1
                endif
             else
-               if(acc_lim.lt.0.d0)then
+               if(acc_lim(j2).lt.0.d0)then
                   dm2 = dm1
-               elseif(acc_lim.ge.0.d0)then
-                  dm2 = acc_lim*dm1
+               elseif(acc_lim(j2).ge.0.d0)then
+                  dm2 = acc_lim(j2)*dm1
                endif
                dmchk = dm2 - 1.05d0*dms(j2)
                if(dmchk.gt.0.d0.and.dm2/mass(j2).gt.1.0d-04)then
@@ -2821,32 +2849,32 @@ component.
 * Accrete until a nova explosion blows away most of the accreted material.
 *
                   novae = .true.
-                  if(acc_lim.lt.0.d0)then
+                  if(acc_lim(j2).lt.0.d0)then
                      dm2 = MIN(dm1,dme)
                      if(dm2.lt.dm1) supedd = .true.
-                  elseif(acc_lim.ge.0.d0)then
-                     dm2 = MIN(dm2,acc_lim*dm1)
-                     if(dm2.lt.acc_lim*dm1) supedd = .true.
+                  elseif(acc_lim(j2).ge.0.d0)then
+                     dm2 = MIN(dm2,acc_lim(j2)*dm1)
+                     if(dm2.lt.acc_lim(j2)*dm1) supedd = .true.
                   endif
                   dm22 = epsnov*dm2
                else
 *
 * Steady burning at the surface
 *
-                  if(acc_lim.lt.0.d0)then
+                  if(acc_lim(j2).lt.0.d0)then
                      dm2 = dm1
-                  elseif(acc_lim.ge.0.d0)then
-                     dm2 = acc_lim*dm1
+                  elseif(acc_lim(j2).ge.0.d0)then
+                     dm2 = acc_lim(j2)*dm1
                   endif
                endif
             else
 *
 * Make a new giant envelope.
 *
-               if(acc_lim.lt.0.d0)then
+               if(acc_lim(j2).lt.0.d0)then
                   dm2 = dm1
-               elseif(acc_lim.ge.0.d0)then
-                  dm2 = MIN(dm2,acc_lim*dm1)
+               elseif(acc_lim(j2).ge.0.d0)then
+                  dm2 = MIN(dm2,acc_lim(j2)*dm1)
                endif
 *
 * Check for planets or low-mass WDs.
@@ -2866,14 +2894,14 @@ component.
          elseif(kstar(j2).eq.3.or.kstar(j2).eq.5.or.kstar(j2).eq.6)then
 * We have a giant w/ kstar(j2) = 3,5,6
 *
-            if(acc_lim.eq.-1.or.acc_lim.eq.-2)then
+            if(acc_lim(j2).eq.-1.or.acc_lim(j2).eq.-2)then
                dm2 = dm1
-            elseif(acc_lim.eq.-3)then
+            elseif(acc_lim(j2).eq.-3)then
                dm2 = MIN(1.d0,10*taum/tkh(j2))*dm1
-            elseif(acc_lim.eq.-4)then
+            elseif(acc_lim(j2).eq.-4)then
                dm2 = MIN(1.d0,taum/tkh(j2))*dm1
-            elseif(acc_lim.ge.0.d0)then
-               dm2 = MIN(dm2,acc_lim*dm1)
+            elseif(acc_lim(j2).ge.0.d0)then
+               dm2 = MIN(dm2,acc_lim(j2)*dm1)
             endif
 
          endif
@@ -2882,7 +2910,7 @@ component.
 * Impose the Eddington limit.
 *
          if(kstar(j2).ge.10)then
-            if(acc_lim.lt.0.d0)then
+            if(acc_lim(j2).lt.0.d0)then
 *
 * If there is wind accretion the total amount of mass change is
 * dms(j2) = dmr(j2) - dmt(j2), where dmt(j2) is the accretion
@@ -2896,20 +2924,20 @@ component.
 *
                if(supedd.eqv..true.) dm2 = 0.d0
                if(dm2.lt.dm1) supedd = .true.
-            elseif(acc_lim.ge.0.d0)then
+            elseif(acc_lim(j2).ge.0.d0)then
 *
 * If there is wind accretion the total amount of mass change is
 * dms(j2) = dmr(j2) - dmt(j2), where dmt(j2) is the accretion
 * from the companion. We should limit to the Eddington limit minus
 * the amount of accretion that is already coming in from Winds
 *
-               dm2 = MIN(acc_lim*dm1,dme + dms(j2))
+               dm2 = MIN(acc_lim(j2)*dm1,dme + dms(j2))
 *
 * If we already hit supereddington wind accretion, don't add
 * any more mass through RLO
 *
                if(supedd.eqv..true.) dm2 = 0.d0
-               if(dm2.lt.acc_lim*dm1) supedd = .true.
+               if(dm2.lt.acc_lim(j2)*dm1) supedd = .true.
             endif
 
 *
@@ -3102,7 +3130,7 @@ component.
                   djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
                   djspint(k) = djspint(k) + djmb*dt
                endif
-            elseif(htpmb.eq.1)then
+            else
                if(ST_cr.le.0.and.
      &            (mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
      &            menv(k).gt.0.0d0))then
@@ -3629,7 +3657,7 @@ component.
      &                      ospin(1),ospin(2),b01_bcm,b02_bcm,
      &                      bacc(1),bacc(2),
      &                      tacc(1),tacc(2),epoch(1),epoch(2),
-     &                      bhspin(1),bhspin(2),teff1,teff2)
+     &                      bhspin(1),bhspin(2))
       endif
 *
       if((isave.and.tphys.ge.tsave).or.iplot)then
@@ -4090,6 +4118,7 @@ component.
  135  continue
 *
       sgl = .true.
+      
       if(kstar(1).eq.13.and.mergemsp.eq.1.and.
      &   notamerger.eq.0)then
          s = (twopi*yearsc)/ospin(1)
@@ -4494,6 +4523,7 @@ component.
          tb = -1.d0
       endif
       tb = tb*yeardy
+*      WRITE(*,*)t_merge,m_merge
 
       if(jp.ge.1000)then
          WRITE(*,*)' STOP: EVOLV2 ARRAY ERROR '
@@ -4515,6 +4545,8 @@ component.
           bcm_index_out = ip
           bpp_index_out = jp
           kick_info_out = kick_info
+          bpp_out = bpp
+          bcm_out = bcm
       endif
 *
 
