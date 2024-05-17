@@ -1,5 +1,5 @@
       
-      SUBROUTINE evolv2_global(z,zpars,acc,alph,qGB,qCHeB,qAGB,kick_in)
+      SUBROUTINE evolv2_global(z,zpars,alph,kick_in)
       
       implicit none
       INCLUDE 'const_bse.h'

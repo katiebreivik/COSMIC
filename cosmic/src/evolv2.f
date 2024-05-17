@@ -4,7 +4,7 @@
      \ menv,renv,ospin,B_0,bacc,tacc,epoch,tms,
      \ bhspin,tphys,zpars,bkick,kick_info,
      \ bpp_index_out,bcm_index_out,kick_info_out,
-     \ bpp_out,bcm_out)
+     \ bpp_out)
       IMPLICIT NONE
       INCLUDE 'const_bse.h'
       INCLUDE 'checkstate.h'
