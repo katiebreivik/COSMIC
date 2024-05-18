@@ -489,7 +489,7 @@ def _evolve_single_system(f):
         _evolvebin.snvars.kickflag = f["kickflag"]
         _evolvebin.cmcpass.using_cmc = 0
 
-        [bpp_index, bcm_index, kick_info, bpp_out, bcm_out] = _evolvebin.evolv2([f["kstar_1"], f["kstar_2"]],
+        [bpp_index, bcm_index, kick_info, bpp_out] = _evolvebin.evolv2([f["kstar_1"], f["kstar_2"]],
                                                               [f["mass_1"], f["mass_2"]],
                                                               f["porb"], f["ecc"], f["metallicity"], f["tphysf"], f["dtp"],
                                                               [f["mass0_1"], f["mass0_2"]],
