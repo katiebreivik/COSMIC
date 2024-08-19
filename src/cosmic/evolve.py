@@ -95,16 +95,19 @@ INITIAL_CONDITIONS_BSE_COLUMNS = ['neta', 'bwind', 'hewind', 'alpha1', 'lambdaf'
 
 INITIAL_CONDITIONS_MISC_COLUMN = ['bin_num']
 
+INITIAL_CONDITIONS_SSE_COLUMN = ['stellar_engine','path_to_tracks','path_to_he_tracks']
+
 # Add the BSE COLUMSN and MISC COLUMN to the PASS_COLUMNS list
 INITIAL_CONDITIONS_PASS_COLUMNS.extend(INITIAL_CONDITIONS_BSE_COLUMNS)
 INITIAL_CONDITIONS_PASS_COLUMNS.extend(INITIAL_CONDITIONS_MISC_COLUMN)
+INITIAL_CONDITIONS_PASS_COLUMNS.extend(INITIAL_CONDITIONS_SSE_COLUMN)
 
 if sys.version_info.major == 2 and sys.version_info.minor == 7:
     INITIAL_BINARY_TABLE_SAVE_COLUMNS = INITIAL_CONDITIONS_PASS_COLUMNS[:]
 else:
     INITIAL_BINARY_TABLE_SAVE_COLUMNS = INITIAL_CONDITIONS_PASS_COLUMNS.copy()
 
-for col in ['natal_kick_array', 'qcrit_array', 'fprimc_array']:
+for col in ['natal_kick_array', 'qcrit_array', 'fprimc_array', 'alpha1', 'acc_lim']:
     INITIAL_BINARY_TABLE_SAVE_COLUMNS.remove(col)
 
 NATAL_KICK_COLUMNS = ['natal_kick',
@@ -120,10 +123,14 @@ for sn_idx in range(2):
 
 QCRIT_COLUMNS = ['qcrit_{0}'.format(kstar) for kstar in range(0, 16)]
 FPRIMC_COLUMNS = ['fprimc_{0}'.format(kstar) for kstar in range(0, 16)]
+ALPHA_COLUMNS = ['alpha1_{0}'.format(star) for star in range(0, 2)]
+ACCLIM_COLUMNS = ['acc_lim_{0}'.format(star) for star in range(0, 2)]
 
 INITIAL_BINARY_TABLE_SAVE_COLUMNS.extend(FLATTENED_NATAL_KICK_COLUMNS)
 INITIAL_BINARY_TABLE_SAVE_COLUMNS.extend(QCRIT_COLUMNS)
 INITIAL_BINARY_TABLE_SAVE_COLUMNS.extend(FPRIMC_COLUMNS)
+INITIAL_BINARY_TABLE_SAVE_COLUMNS.extend(ALPHA_COLUMNS)
+INITIAL_BINARY_TABLE_SAVE_COLUMNS.extend(ACCLIM_COLUMNS)
 
 # BSE doesn't need the binary fraction, so just add to columns for saving
 INITIAL_BINARY_TABLE_SAVE_COLUMNS.insert(7, 'binfrac')
@@ -210,6 +217,8 @@ class Evolve(object):
 
         # NUMBER 1: PASS A DICTIONARY OF FLAGS
         BSEDict = kwargs.pop('BSEDict', {})
+        SSEDict = kwargs.pop('SSEDict', {})
+
 
         # NUMBER 2: PASS A PANDAS DATA FRAME WITH PARAMS DEFINED AS COLUMNS
 
@@ -229,15 +238,15 @@ class Evolve(object):
             if not os.path.isfile(params):
                 raise ValueError("File does not exist, probably supplied incorrect "
                                  "path to the inifile.")
-            BSEDict, _, _, _, _ = utils.parse_inifile(params)
+            BSEDict, SSEDict, _, _, _, _ = utils.parse_inifile(params)
 
         # error check the parameters you are trying to pass to BSE
         # if we sent in a table with the parameter names
         # then we will temporarily create a dictionary
         # in order to verify that the values in the table
         # are valid
-        utils.error_check(BSEDict)
-
+        utils.error_check(BSEDict, SSEDict)
+        
         # check the initial conditions of the system and warn user if
         # anything is weird about them, such as the star starts
         # in Roche Lobe overflow
@@ -253,6 +262,24 @@ class Evolve(object):
         if 'bin_num' not in initialbinarytable.keys():
             initialbinarytable = initialbinarytable.assign(bin_num=np.arange(idx, idx + len(initialbinarytable)))
 
+        if SSEDict:
+            if SSEDict['stellar_engine'] == 'metisse':
+                for k, v in SSEDict.items():
+                    if k in initialbinarytable.keys():
+                        warnings.warn("The value for {0} in initial binary table is being "
+                                    "overwritten by the value of {0} from either the params "
+                                    "file or the SSEDict.".format(k))
+                    # assigning values this way work for most of the parameters.:
+
+                    kwargs1 = {k: v}
+                    initialbinarytable = initialbinarytable.assign(**kwargs1)
+            elif SSEDict['stellar_engine'] == 'sse':
+                kwargs1 = {'stellar_engine': 'sse'}
+                initialbinarytable = initialbinarytable.assign(**kwargs1)
+                for col in ['path_to_tracks', 'path_to_he_tracks']:
+                    kwargs1 = {col: ''}
+                    initialbinarytable = initialbinarytable.assign(**kwargs1)
+            
         for k, v in BSEDict.items():
             if k in initialbinarytable.keys():
                 warnings.warn("The value for {0} in initial binary table is being "
@@ -285,6 +312,22 @@ class Evolve(object):
                                                index=initialbinarytable.index,
                                                name='fprimc_{0}'.format(kstar))
                     initialbinarytable.loc[:, 'fprimc_{0}'.format(kstar)] = columns_values
+            elif k == 'alpha1':
+                columns_values = [BSEDict['alpha1']] * len(initialbinarytable)
+                initialbinarytable = initialbinarytable.assign(alpha1=columns_values)
+                for kstar in range(0, 2):
+                    columns_values = pd.Series([BSEDict['alpha1'][kstar]] * len(initialbinarytable),
+                                               index=initialbinarytable.index,
+                                               name='alpha1_{0}'.format(kstar))
+                    initialbinarytable.loc[:, 'alpha1_{0}'.format(kstar)] = columns_values
+            elif k == 'acc_lim':
+                columns_values = [BSEDict['acc_lim']] * len(initialbinarytable)
+                initialbinarytable = initialbinarytable.assign(acc_lim=columns_values)
+                for kstar in range(0,2):
+                    columns_values = pd.Series([BSEDict['acc_lim'][kstar]] * len(initialbinarytable),
+                                               index=initialbinarytable.index,
+                                               name='acc_lim_{0}'.format(kstar))
+                    initialbinarytable.loc[:, 'acc_lim_{0}'.format(kstar)] = columns_values
             else:
                 # assigning values this way work for most of the parameters.
                 kwargs1 = {k: v}
@@ -295,7 +338,7 @@ class Evolve(object):
         # and either a dictionary or an inifile was not provided
         # then we need to raise an ValueError and tell the user to provide
         # either a dictionary or an inifile or add more columns
-        if not BSEDict:
+        if BSEDict and SSEDict is None:
             if ((not set(INITIAL_BINARY_TABLE_SAVE_COLUMNS).issubset(initialbinarytable.columns)) and
                (not set(INITIAL_CONDITIONS_PASS_COLUMNS).issubset(initialbinarytable.columns))):
                 raise ValueError("You are passing BSE parameters as columns in the "
@@ -303,6 +346,11 @@ class Evolve(object):
                                  "Please pass a BSEDict or a params file or make sure "
                                  "you have all BSE parameters as columns {0} or {1}.".format(
                                   INITIAL_BINARY_TABLE_SAVE_COLUMNS, INITIAL_CONDITIONS_PASS_COLUMNS))
+            
+        if (BSEDict and not SSEDict) or (SSEDict and not BSEDict):
+            raise ValueError("If you are passing BSE parameters as columns in the "
+                             "initial binary table you must also pass SSE parameters "
+                             "in the initial binary table.")
 
         # If you did not supply the natal kick or qcrit_array or fprimc_array in the BSEdict then we construct
         # it from the initial conditions table
@@ -319,6 +367,13 @@ class Evolve(object):
         if (pd.Series(FPRIMC_COLUMNS).isin(initialbinarytable.keys()).all()) and ('fprimc_array' not in BSEDict):
             initialbinarytable = initialbinarytable.assign(fprimc_array=initialbinarytable[FPRIMC_COLUMNS].values.tolist())
 
+        if (pd.Series(ALPHA_COLUMNS).isin(initialbinarytable.keys()).all()) and ('alpha1' not in BSEDict):
+            initialbinarytable = initialbinarytable.assign(alpha1=initialbinarytable[ALPHA_COLUMNS].values.tolist())
+     
+        if (pd.Series(ACCLIM_COLUMNS).isin(initialbinarytable.keys()).all()) and ('acc_lim' not in BSEDict):
+            initialbinarytable = initialbinarytable.assign(acc_lim=initialbinarytable[ACCLIM_COLUMNS].values.tolist())
+
+              
         # need to ensure that the order of parameters that we pass to BSE
         # is correct
         initial_conditions = initialbinarytable[INITIAL_CONDITIONS_PASS_COLUMNS].to_dict('records')
@@ -462,6 +517,18 @@ def _evolve_single_system(f):
         _evolvebin.metvars.zsun = f["zsun"]
         _evolvebin.snvars.kickflag = f["kickflag"]
         _evolvebin.cmcpass.using_cmc = 0
+        if f["stellar_engine"] == "sse":
+            _evolvebin.se_flags.using_sse = True
+            _evolvebin.se_flags.using_metisse = False
+            path_to_tracks = ""
+            path_to_he_tracks = ""
+        elif f["stellar_engine"] == "metisse":
+            _evolvebin.se_flags.using_metisse = True
+            _evolvebin.se_flags.using_sse = False
+            path_to_tracks = f["path_to_tracks"]
+            path_to_he_tracks = f["path_to_he_tracks"]
+        else:
+            raise ValueError("Use either 'sse' or 'metisse' as stellar engine")
 
         [bpp_index, bcm_index, kick_info] = _evolvebin.evolv2([f["kstar_1"], f["kstar_2"]],
                                                               [f["mass_1"], f["mass_2"]],
@@ -483,15 +550,21 @@ def _evolve_single_system(f):
                                                               f["tphys"],
                                                               np.zeros(20),
                                                               np.zeros(20),
-                                                              f["kick_info"])
-        bcm = _evolvebin.binary.bcm[:bcm_index].copy()
-        bpp = _evolvebin.binary.bpp[:bpp_index].copy()
-        _evolvebin.binary.bpp[:bpp_index] = np.zeros(bpp.shape)
-        _evolvebin.binary.bcm[:bcm_index] = np.zeros(bcm.shape)
+                                                              f["kick_info"],
+                                                              path_to_tracks,
+                                                              path_to_he_tracks)
+                                                              
+        if bpp_index<0:
+            raise ValueError("Failed in METISSE_zcnsts")
+        else:
+            bcm = _evolvebin.binary.bcm[:bcm_index].copy()
+            bpp = _evolvebin.binary.bpp[:bpp_index].copy()
+            _evolvebin.binary.bpp[:bpp_index] = np.zeros(bpp.shape)
+            _evolvebin.binary.bcm[:bcm_index] = np.zeros(bcm.shape)
 
-        bpp = np.hstack((bpp, np.ones((bpp.shape[0], 1))*f["bin_num"]))
-        bcm = np.hstack((bcm, np.ones((bcm.shape[0], 1))*f["bin_num"]))
-        kick_info = np.hstack((kick_info, np.ones((kick_info.shape[0], 1))*f["bin_num"]))
+            bpp = np.hstack((bpp, np.ones((bpp.shape[0], 1))*f["bin_num"]))
+            bcm = np.hstack((bcm, np.ones((bcm.shape[0], 1))*f["bin_num"]))
+            kick_info = np.hstack((kick_info, np.ones((kick_info.shape[0], 1))*f["bin_num"]))
 
         return f, bpp, bcm, kick_info, _evolvebin.snvars.natal_kick_array.copy()
 

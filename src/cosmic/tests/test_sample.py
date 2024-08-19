@@ -220,6 +220,20 @@ class TestSample(unittest.TestCase):
         m1_b, m1_s, binfrac, bin_index = SAMPLECLASS.binary_select(primary_mass=np.arange(1,100), binfrac_model='vanHaaften')
         self.assertEqual(binfrac.max(), VANHAAFTEN_BINFRAC_MAX)
         self.assertEqual(binfrac.min(), VANHAAFTEN_BINFRAC_MIN)
+        test_fracs = []
+        test_errs = []
+        primary_mass = np.array([float(x) for x in np.logspace(np.log10(0.08), np.log10(150), num=100000)])
+        m1_b, m1_s, binfrac, bin_index = SAMPLECLASS.binary_select(primary_mass=primary_mass, binfrac_model='offner22')
+        for i in range(len(OFFNER_MASS_RANGES)):
+            low, high = OFFNER_MASS_RANGES[i][0], OFFNER_MASS_RANGES[i][1]
+            offner_value = OFFNER_DATA[i]
+            offner_error = OFFNER_ERRORS[i]
+            bins_count = len(m1_b[(m1_b >= low) & (m1_b <= high)])
+            singles_count = len(m1_s[(m1_s >= low) & (m1_s <= high)])
+            bin_frac = bins_count / (bins_count + singles_count)
+            error = abs(offner_value - bin_frac)
+            self.assertLess(error, offner_error)
+        
 
         test_fracs = []
         test_errs = []
@@ -263,6 +277,7 @@ class TestSample(unittest.TestCase):
         mass2 = SAMPLECLASS.sample_secondary(primary_mass = mass1, qmin=0.1)
         rad1 = SAMPLECLASS.set_reff(mass=mass1, metallicity=0.02)
         rad2 = SAMPLECLASS.set_reff(mass=mass2, metallicity=0.02)
+        print(rad1,rad2)
         porb,aRL_over_a = SAMPLECLASS.sample_porb(
             mass1, mass2, rad1, rad2, 'sana12', size=mass1.size
         )

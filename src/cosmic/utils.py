@@ -29,6 +29,7 @@ import operator
 import json
 import itertools
 import os.path
+import glob
 
 from configparser import ConfigParser
 from .bse_utils.zcnsts import zcnsts
@@ -925,11 +926,14 @@ def get_met_dep_binfrac(met):
 
     return float(np.round(binfrac, 2))
 
-def error_check(BSEDict, filters=None, convergence=None, sampling=None):
-    """Checks that values in BSEDict, filters, and convergence are viable"""
+def error_check(BSEDict, SSEDict, filters=None, convergence=None, sampling=None):
+    """Checks that values in BSEDict, SSEDict,filters, and convergence are viable"""
     if not isinstance(BSEDict, dict):
         raise ValueError("BSE flags must be supplied via a dictionary")
 
+    if not isinstance(SSEDict, dict):
+        raise ValueError("SSE flags must be supplied via a dictionary")
+    
     if filters is not None:
         if not isinstance(filters, dict):
             raise ValueError("Filters criteria must be supplied via a dictionary")
@@ -1089,6 +1093,53 @@ def error_check(BSEDict, filters=None, convergence=None, sampling=None):
                 )
             )
 
+    # SSEDict
+    flag = "stellar_engine"
+    acceptable_stellar_engines = ["sse", "metisse"]
+    if flag in SSEDict.keys():
+        if SSEDict[flag] not in acceptable_stellar_engines:
+            raise ValueError(
+                "{0} needs to be one of 'sse', 'metisse' (you set it to {1})".format(
+                flag, SSEDict[flag]
+                )
+            )
+            
+    flag = "path_to_tracks"
+    if "stellar_engine" in SSEDict.keys():
+        if SSEDict["stellar_engine"] == "metisse":
+            if SSEDict[flag] == '':
+                raise ValueError(
+                    "If you want to use METISSE as the stellar engine, {0} needs to be a non-empty string".format (
+                    flag
+                    )
+                )
+            else:
+                metallicity_file = glob.glob(SSEDict[flag]+'/*_metallicity.in')
+                if metallicity_file == []:
+                    raise ValueError(
+                        "No metallicity file found in {0}. Make sure that {1} is valid".format (
+                        SSEDict[flag], flag
+                        )
+                    )
+        
+    flag = "path_to_he_tracks"
+    if "stellar_engine" in SSEDict.keys():
+        if SSEDict["stellar_engine"] == "metisse":
+            if SSEDict[flag] == '':
+                warnings.warn(
+                    "If you want to use METISSE as the stellar engine,{0} needs to be a non-empty string, otheriwse SSE formulae will be used for helium stars".format (
+                    flag
+                )
+            )
+            else:
+                metallicity_file = glob.glob(SSEDict[flag]+'/*_metallicity.in')
+                if metallicity_file == []:
+                    raise ValueError(
+                        "No metallicity file for helium star tracks found in {0}. Make sure that {1} is valid".format (
+                        SSEDict[flag], flag
+                    )
+                )
+                
     # BSEDict
     flag = "dtp"
     if flag in BSEDict.keys():
@@ -1206,12 +1257,13 @@ def error_check(BSEDict, filters=None, convergence=None, sampling=None):
 
     flag = "alpha1"
     if flag in BSEDict.keys():
-        if BSEDict[flag] <= 0:
-            raise ValueError(
-                "'{0:s}' needs to be greater than 0 (you set it to '{1:0.2f}')".format(
-                    flag, BSEDict[flag]
+        for f in BSEDict[flag]:
+            if f <= 0:
+                raise ValueError(
+                    "'{0:s}' needs to be greater than 0 (you set it to '{1:0.2f}')".format(
+                        flag, BSEDict[flag]
+                    )
                 )
-            )
     flag = "lambdaf"
     # --- all numbers are valid
     flag = "ceflag"
@@ -1570,13 +1622,14 @@ def error_check(BSEDict, filters=None, convergence=None, sampling=None):
             )
     flag = "acc_lim"
     if flag in BSEDict.keys():
-        if BSEDict[flag] not in [-1, -2, -3, -4]:
-            if BSEDict[flag] < 0.0:
-                raise ValueError(
-                    "'{0:s}' needs to be set to -1, -2, -3, -4 or be >=0 (you set it to '{1:0.2f}')".format(
-                        flag, BSEDict[flag]
+        for f in BSEDict[flag]:
+            if f not in [-1, -2, -3, -4]:
+                if BSEDict[flag] < 0.0:
+                    raise ValueError(
+                        "'{0:s}' needs to be set to -1, -2, -3, -4 or be >=0 (you set it to '{1:0.2f}')".format(
+                            flag, BSEDict[flag]
+                        )
                     )
-                )
             
     flag = "wd_mass_lim"
     if flag in BSEDict.keys():
@@ -1596,7 +1649,8 @@ def check_initial_conditions(full_initial_binary_table):
     Only warning provided right now is if star begins in Roche lobe
     overflow
     """
-
+    #from cosmic import _evolvebin
+    
     def rzamsf(m):
         """A function to evaluate Rzams
         ( from Tout et al., 1996, MNRAS, 281, 257 ).
@@ -1626,7 +1680,7 @@ def check_initial_conditions(full_initial_binary_table):
     else:
         rzams1 = rzamsf(mass1)
         rzams2 = rzamsf(mass2)
-
+        
         # assume some time step in order to calculate sep
         yeardy = 365.24
         aursun = 214.95
@@ -1701,7 +1755,8 @@ def convert_kstar_evol_type(bpp):
         14: "blue straggler",
         15: "supernova of primary",
         16: "supernova of secondary",
-       100: "RLOF interpolation timeout error"
+       100: "RLOF interpolation timeout error",
+       101: "METISSE error"
     }
 
     evolve_type_string_to_int_dict = {
@@ -1816,6 +1871,8 @@ def parse_inifile(inifile):
                 dictionary["convergence"] = 0
             if "sampling" not in dictionary.keys():
                 dictionary["sampling"] = 0
+            if "sse" not in dictionary.keys():
+                dictionary["sse"] = 0
             continue
         dictionary[section] = {}
         for option in cp.options(section):
@@ -1831,14 +1888,15 @@ def parse_inifile(inifile):
             finally:
                 if option not in dictionary[section].keys():
                     raise ValueError("We have detected an error in your inifile. The folloiwng parameter failed to be read correctly: {0}".format(option))
-
+                    
+    SSEDict = dictionary["sse"]
     BSEDict = dictionary["bse"]
     seed_int = int(dictionary["rand_seed"]["seed"])
     filters = dictionary["filters"]
     convergence = dictionary["convergence"]
     sampling = dictionary["sampling"]
 
-    return BSEDict, seed_int, filters, convergence, sampling
+    return BSEDict, SSEDict, seed_int, filters, convergence, sampling
 
 
 class VariableKey(object):
