@@ -43,7 +43,7 @@
       real*8 epoch(2),tms(2),tphys,tphysf,dtp,aj
       real*8 rad(2),lum(2),ospin(2)
       real*8 massc(2),radc(2),menv(2),renv(2)
-      real*8 tb,ecc,yearsc
+      real*8 tb,ecc,yearsc,alp_1, alp_2
       real*8 B_0(2),bacc(2),tacc(2),bhspin(2),bkick(20)
       PARAMETER(yearsc=3.1557d+07)
       CHARACTER*8 label(16)
@@ -97,7 +97,7 @@
 *
       OPEN(22,file='binary.in', status='old')
       READ(22,*)mass0(1),mass0(2),tphysf,tb,kstar(1),kstar(2),z,ecc
-      READ(22,*)neta,bwind,hewind,alpha1,lambdaf,windflag,rtmsflag
+      READ(22,*)neta,bwind,hewind,alp_1,alp_2,lambdaf,windflag,rtmsflag
       READ(22,*)ceflag,tflag,ifflag,wdflag,bhflag,remnantflag,mxns,idum
       READ(22,*)pts1,pts2,pts3
       READ(22,*)sigma,beta,xi,acc2,epsnov,eddfac,gamma
@@ -112,7 +112,7 @@
       else
 
       WRITE(*,*)mass0(1),mass0(2),tphysf,tb,kstar(1),kstar(2),z,ecc
-      WRITE(*,*)neta,bwind,hewind,alpha1,lambdaf,windflag,rtmsflag
+      WRITE(*,*)neta,bwind,hewind,alp_1,alp_2,lambdaf,windflag,rtmsflag
       WRITE(*,*)ceflag,tflag,ifflag,wdflag,bhflag,remnantflag,mxns,idum
       WRITE(*,*)pts1,pts2,pts3
       WRITE(*,*)sigma,beta,xi,acc2,epsnov,eddfac,gamma
@@ -143,6 +143,9 @@
          bhspin(2) = 0.d0
          tms(1) = 0.d0
          tms(2) = 0.d0
+
+         alpha1(1) = alp_1
+         alpha1(2) = alp_2
 *
 * NOTE: The following parameters are set to current default values (v3.4.10).
 * They should really be included in binary.in and copied from an initC
@@ -172,7 +175,8 @@
             qcrit_array(i) = 0.0
         enddo
         don_lim = -1
-        acc_lim = -1
+        acc_lim(1) = -1
+        acc_lim(2) = -1
         bdecayfac = 1
         bconst = 3000
         ck = 1000
@@ -214,6 +218,8 @@
       if(idum.gt.0) idum = -idum
       CLOSE(22)
       WRITE(*,*)
+
+      if(using_METISSE) CALL initialize_front_end('cosmic')
 *
 * Note that this routine can be used to evolve a single star if you 
 * simply set mass(2) = 0.0 or tb = 0.0 (setting both is advised as  
