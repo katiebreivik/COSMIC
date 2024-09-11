@@ -98,10 +98,12 @@ def parse_commandline():
                         help="Number of binaries to try before checking for "
                         "convergence, it will check ever Nstep binaries until "
                         "it reach Niter binaries", type=int, default=10000)
+    parser.add_argument("--max-wall-time", type=int, default=3155760,
+                        help="Maximum wall time (seconds) for sampling binaries")
     parser.add_argument("--binary_state", nargs='+', type=int)
     parser.add_argument("--sampling_method")
     parser.add_argument("--primary_model", help="Chooses the initial primary mass function from: salpeter55, kroupa93, kroupa01", type=str)
-    parser.add_argument("--binfrac_model", help="Chooses the binary fraction model from: a float between [0,1] and vanHaaften", type=float)
+    parser.add_argument("--binfrac_model", help="Chooses the binary fraction model from: a float between [0,1], vanHaaften, and offner22", type=float)
     parser.add_argument("--ecc_model", help="Chooses the initial eccentricity distribution model from: thermal, uniform, and sana12", type=str)
     parser.add_argument("--porb_model", help="Chooses the initial orbital period distribution model from: log_uniform and sana12", type=str)
     parser.add_argument("--SF_start", help="Sets the time in the past when star formation initiates in Myr", type=float)
@@ -119,6 +121,10 @@ def parse_commandline():
     parser.add_argument("--seed", type=int)
     parser.add_argument("--verbose", action="store_true", default=False,
                         help="Run in Verbose Mode")
+    parser.add_argument("--complib",type=str,default="zlib",
+        help="HDFStore compression library")
+    parser.add_argument("--complevel",type=int,default=0,
+        help="HDFStore compression level")
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-n", "--nproc",
@@ -232,7 +238,7 @@ if __name__ == '__main__':
 
     # Open the hdf5 file to store the fixed population data
     try:
-        dat_store = pd.HDFStore('dat_kstar1_{0}_kstar2_{1}_SFstart_{2}_SFduration_{3}_metallicity_{4}.h5'.format(kstar1_range_string, kstar2_range_string, sampling['SF_start'], sampling['SF_duration'], sampling['metallicity']))
+        dat_store = pd.HDFStore('dat_kstar1_{0}_kstar2_{1}_SFstart_{2}_SFduration_{3}_metallicity_{4}.h5'.format(kstar1_range_string, kstar2_range_string, sampling['SF_start'], sampling['SF_duration'], sampling['metallicity']),complib=args.complib,complevel=args.complevel)
         conv_save = pd.read_hdf(dat_store, 'conv')
         log_file = open('log_kstar1_{0}_kstar2_{1}_SFstart_{2}_SFduration_{3}_metallicity_{4}.txt'.format(kstar1_range_string, kstar2_range_string, sampling['SF_start'], sampling['SF_duration'], sampling['metallicity']), 'a')
         log_file.write('There are already: '+str(conv_save.shape[0])+' '+kstar1_range_string+'_'+kstar2_range_string+' binaries evolved\n')
@@ -246,7 +252,7 @@ if __name__ == '__main__':
         idx = int(np.max(pd.read_hdf(dat_store, 'idx'))[0])
     except:
         conv_save = pd.DataFrame()
-        dat_store = pd.HDFStore('dat_kstar1_{0}_kstar2_{1}_SFstart_{2}_SFduration_{3}_metallicity_{4}.h5'.format(kstar1_range_string, kstar2_range_string, sampling['SF_start'], sampling['SF_duration'], sampling['metallicity']))
+        dat_store = pd.HDFStore('dat_kstar1_{0}_kstar2_{1}_SFstart_{2}_SFduration_{3}_metallicity_{4}.h5'.format(kstar1_range_string, kstar2_range_string, sampling['SF_start'], sampling['SF_duration'], sampling['metallicity']),complib=args.complib,complevel=args.complevel)
         total_mass_singles = 0  
         total_mass_binaries = 0
         total_mass_stars = 0
@@ -284,7 +290,7 @@ if __name__ == '__main__':
         log_file.write("You have specified both qmin and m2_min.\n")
         log_file.write("COSMIC will use qmin={} to determine the secondary masses in the initial sample.\n".format(args.qmin))
 
-    while (Nstep < args.Niter) & (np.max(match) > convergence['match']):
+    while (Nstep < args.Niter) & (np.max(match) > convergence['match']) & ((time.time() - start_time) < args.max_wall_time):
         # Set random seed such that each iteration gets a unique, determinable seed
         rand_seed = seed_int + Nstep
         np.random.seed(rand_seed)

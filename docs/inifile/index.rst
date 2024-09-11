@@ -924,6 +924,11 @@ common envelope occurs regardless of the choices below:
                             ``-1 < *rembar_massloss* < 0`` : assumes that proto-compact objects lose a constant fraction of their baryonic mass when collapsing to a black hole (e.g., *rembar_massloss* = -0.1 gives the black hole a gravitational mass that is 90% of the proto-compact object's baryonic mass)
 
                      **rembar_massloss = 0.5**
+
+``wd_mass_lim``      Determines if the maximum white dwarf mass is limited to
+                     the chandraekhar mass during mic. 1 implements the limit.
+                     
+                     **wd_mass_lim = 1**
 ===================  =====================================================
 
 .. code-block:: ini
@@ -952,6 +957,11 @@ common envelope occurs regardless of the choices below:
     ; assuming for BHs Mrem = (1+rembar_massloss)*Mrem,bar for negative rembar_massloss
     ; default = 0.5
     rembar_massloss = 0.5
+
+    ; wd_mass_lim determines if the maximum white dwarf mass is limited to
+    ; the chandraekhar mass during mic. 1 implements the limit.
+    ; default = 1
+    wd_mass_lim = 1 
 
 .. note::
 
@@ -1045,6 +1055,11 @@ common envelope occurs regardless of the choices below:
                             ``-2`` : assumes material is lost from the system as
                             if it is a wind from the secondary
 
+                            ``-3`` : assumes mass is lost through the outer Lagrangian point,
+                            forming a circumbinary disk. See Zapartas+17 Eq. 9 and
+                            Artymowicz & Lubow (1994).
+
+
                             ``>0`` : assumes that the lost material takes away a
                             fraction *gamma* of the orbital angular momentum
 
@@ -1094,6 +1109,7 @@ common envelope occurs regardless of the choices below:
     eddfac = 1.0
 
     ; gamma is the angular momentum factor for mass lost during Roche-lobe overflow
+    ; gamma=-3: assumes mass is lost through the outer Lagrangian point, forming a circumbinary disk. See Zapartas+17 Eq. 9 and Artymowicz & Lubow (1994).
     ; gamma=-2: assumes material is lost from the system as if it is a wind from the secondary (for super-Eddington mass transfer rates)
     ; gamma=-1: assumes the lost material carries with is the specific angular momentum of the primary
     ; gamma>0: assumes that the lost material take away a fraction (gamma) of the orbital angular momentum
@@ -1345,6 +1361,8 @@ common envelope occurs regardless of the choices below:
 =======================  =====================================================
 ``htpmb``                Activates different models for magnetic braking
 
+                            ``-1`` : no magnetic braking
+
                             ``0`` : no modifications to BSE
 
                             ``1`` : follows `Ivanona and Taam 2003 <https://ui.adsabs.harvard.edu/abs/2003ApJ...599..516I/abstract>`_
@@ -1361,6 +1379,7 @@ common envelope occurs regardless of the choices below:
     ; htpmb allows for different magnetic braking models.
     ; 0=follows BSE paper Section 2.4
     ; 1=follows Ivanova & Taam 2003 method which kicks in later than the standard
+    ; -1=turns off magnetic braking
     ; default = 1
     htpmb = 1
 
