@@ -359,6 +359,22 @@
                            kw = 15
                            pisn_track(kidx)=7
                         endif
+                     elseif(pisn.eq.-4)then
+                        if(mcbagb.ge.30.and.mcbagb.le.60)then
+                           if(mcbagb.lt.38)then
+                              mt = 4 + mcbagb
+                           else
+                              mt = -0.096*mcbagb**2d0 
+     &                             + 8.564*mcbagb 
+     &                             - 2.07*zpars(15)
+     &                             - 152.97
+                              pisn_track(kidx)=6
+                           endif
+                        elseif(mcbagb.gt.60)then
+                           mt = 0.d0
+                           kw = 15
+                           pisn_track(kidx)=7
+                        endif
                      endif
 
 * Convert baryonic mass to gravitational mass

@@ -36,6 +36,7 @@
 *             12; helium abundance.
 *             13; constant x in rmin = rgb*x**y used by LM CHeB.
 *             14; z**0.4 to be used for WD L formula.
+*             15; log10(metallicity)
 *
 *       ------------------------------------------------------------
 *
@@ -53,6 +54,7 @@
       zpars(7) = c(1) + lzs*(c(2) + lzs*(c(3) + lzs*(c(4) + lzs*c(5))))
       zpars(8) = MAX(0.95d0,MAX(0.95d0-(10.d0/3.d0)*(z-0.01d0),
      &           MIN(0.99d0,0.98d0-(100.d0/7.d0)*(z-0.001d0))))
+      zpars(15) = lz
 ***
 * Lzams
       msp(1) = xz(1)+lzs*(xz(2)+lzs*(xz(3)+lzs*(xz(4)+lzs*xz(5))))
