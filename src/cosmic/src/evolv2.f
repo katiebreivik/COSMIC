@@ -3934,6 +3934,8 @@ component.
       if(output) write(*,*)'coal r/rl1 & r/rl2 > 0',tphys,kcomp1,kcomp2,
      & m1ce,m2ce
 *
+* Check to see if donor has envelope
+*
       if(kstar(j1).ge.2.and.kstar(j1).le.9.and.kstar(j1).ne.7)then
          if(j1.eq.2)then
              switchedCE = .true.
@@ -4018,6 +4020,9 @@ component.
              sep = -1.d0
              tb = -1.d0
          endif
+*
+* Check to see if 'accretor' has envelope
+*
       elseif(kstar(j2).ge.2.and.kstar(j2).le.9.and.kstar(j2).ne.7)then
          if(j1.eq.1)then
              switchedCE = .true.
