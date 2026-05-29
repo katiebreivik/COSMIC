@@ -27,7 +27,7 @@
               mc_he(id) = mc
               mc_co(id) = 0.d0
            elseif(kw.eq.4)then
-              mc_he(id) = mc
+              mc_he(id) = mc-mcx
               mc_co(id) = mcx
            elseif(kw.eq.5)then
               mc_co(id) = mcx
