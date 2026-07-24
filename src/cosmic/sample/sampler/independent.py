@@ -560,7 +560,7 @@ class Sample(object):
 
         # Make sure m1_min value is below 0.5, since otherwise it will not work for Kroupa IMF
         if m1_min > 0.5:
-            raise ValueError("m1_min must be greater than 0.5 Msun")
+            raise ValueError("m1_min not must be greater than 0.5 Msun")
 
         if primary_model == 'kroupa93':
             alphas, mcuts = [-1.3,-2.2,-2.7], [m1_min,0.5,1.0,m_max]
