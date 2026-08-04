@@ -32,7 +32,8 @@
      &                  eddfac,gamma,LBV_flag
       REAL*8 alpha1(2),lambdaf
       REAL*8 qcrit_array(16)
-      COMMON /CEVARS/ qcrit_array,alpha1,lambdaf
+      REAL*8 plunge_a,plunge_b
+      COMMON /CEVARS/ qcrit_array,alpha1,lambdaf,plunge_a,plunge_b
       REAL*8 bconst,CK
       COMMON /MAGVARS/ bconst,CK
       INTEGER kickflag,fryer_mass_limit

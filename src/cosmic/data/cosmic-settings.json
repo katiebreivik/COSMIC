@@ -260,7 +260,6 @@
                         "description": "For example, this specifies a constant star formation rate over a Hubble time"
                     }
                 ]
-
             },
             {
                 "name": "metallicity",
@@ -460,7 +459,7 @@
         ]
     },
     {
-        "category": "sse", 
+        "category": "sse",
         "category_label": "Single star evolution",
         "category_description": "Settings that control the single star evolution in the simulation",
         "docs-colour": "lightsteelblue",
@@ -475,14 +474,13 @@
                         "name": "sse",
                         "description": "Use SSE for single star evolution which will apply the fitting formulae from <a href='https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract'>Hurley+2000</a> for the single star evolution",
                         "default": true
-
                     },
                     {
                         "name": "metisse",
                         "description": "Use METISSE for single star evolution, must supply <code>path_to_tracks</code> and <code>path_to_he_tracks</code>"
                     }
                 ]
-            }, 
+            },
             {
                 "name": "path_to_tracks",
                 "description": "Path to the METISSE tracks for single star evolution. Must be supplied if <code>stellar_engine</code> is set to <code>metisse</code>",
@@ -674,8 +672,7 @@
                     },
                     {
                         "name": 7,
-                        "description": "<a href='https://scixplorer.org/abs/2024A%26A...681A..29K/abstract'>Kritcka, Kubat &amp; Kritckova 2024"
-                        ,
+                        "description": "<a href='https://scixplorer.org/abs/2024A%26A...681A..29K/abstract'>Kritcka, Kubat &amp; Kritckova 2024",
                         "version added": "3.7.7"
                     }
                 ]
@@ -864,7 +861,7 @@
                         "description": "Uses a fixed value (i.e. fixes \\( \\lambda \\) to a value of -lambdaf)"
                     }
                 ]
-            }, 
+            },
             {
                 "name": "ceflag",
                 "description": "Selects the model to set the initial orbital energy (choose whether to use total mass of the stars instead of the core masses)",
@@ -878,6 +875,44 @@
                     {
                         "name": 1,
                         "description": "Use the total mass of the stars to set the initial orbital energy (as in <a href='https://ui.adsabs.harvard.edu/abs/1990ApJ...358..189D/abstract'>de Kool 1990</a>)",
+                        "default": true
+                    },
+                    {
+                        "name": 2,
+                        "description": "Use the empirical plunge-in fit of <a href='https://arxiv.org/abs/2511.02150'>Borges 2025</a>, af/R1 = plunge_a*q + plunge_b (q = m2/m1, the companion mass over the donor's current total mass), fit to 3D common-envelope simulations spanning RGB, AGB, and supergiant donors. Bypasses the orbital-energy balance entirely for the post-plunge separation; only applies to the single-donor case (secondary on the main sequence or a naked helium star)."
+                    }
+                ]
+            },
+            {
+                "name": "plunge_a",
+                "description": "Slope of the empirical post-plunge separation vs. mass ratio relation from <a href='https://arxiv.org/abs/2511.02150'>Borges 2025</a> (af/R1 = plunge_a*q + plunge_b). Only used when <code>ceflag = 2</code>.",
+                "type": "number",
+                "options-preface": "The default is the combined fit across all RGB, AGB, and supergiant simulations in Borges 2025 (their Eq. 6). For a donor-specific calibration, e.g. their Table 2 gives plunge_a = 0.54 for the Sand et al. (2020) low-mass AGB donor including recombination energy (OPAL EoS), vs. plunge_a = 0.44 for the same donor without recombination (ideal gas).",
+                "options": [
+                    {
+                        "name": "positive values",
+                        "description": "Slope of the af/R1 vs. mass ratio fit"
+                    },
+                    {
+                        "name": 0.31,
+                        "description": "Default value -- combined RGB+AGB+supergiant fit from Borges 2025, Eq. 6",
+                        "default": true
+                    }
+                ]
+            },
+            {
+                "name": "plunge_b",
+                "description": "Intercept of the empirical post-plunge separation vs. mass ratio relation from <a href='https://arxiv.org/abs/2511.02150'>Borges 2025</a> (af/R1 = plunge_a*q + plunge_b). Only used when <code>ceflag = 2</code>.",
+                "type": "number",
+                "options-preface": "The default is the combined fit across all RGB, AGB, and supergiant simulations in Borges 2025 (their Eq. 6). For a donor-specific calibration, e.g. their Table 2 gives plunge_b = -0.017 for the Sand et al. (2020) low-mass AGB donor including recombination energy (OPAL EoS), vs. plunge_b = -0.015 for the same donor without recombination (ideal gas).",
+                "options": [
+                    {
+                        "name": "any value",
+                        "description": "Intercept of the af/R1 vs. mass ratio fit"
+                    },
+                    {
+                        "name": -0.011,
+                        "description": "Default value -- combined RGB+AGB+supergiant fit from Borges 2025, Eq. 6",
                         "default": true
                     }
                 ]
@@ -1399,7 +1434,7 @@
                         "description": "Sets the mixing fraction for the <a class='reference external' href='https://scixplorer.org/abs/2022ApJ...931...94F/abstract'>Fryer+2022</a> SN remnant mass model"
                     },
                     {
-                        "name":1.0,
+                        "name": 1.0,
                         "description": "Default choice",
                         "default": true
                     }
@@ -1417,7 +1452,7 @@
                         "description": "Sets the critical NS/BH core mass for the <a class='reference external' href='https://scixplorer.org/abs/2022ApJ...931...94F/abstract'>Fryer+2022</a> SN remnant mass model (solar masses)"
                     },
                     {
-                        "name":5.75,
+                        "name": 5.75,
                         "description": "Default choice",
                         "default": true
                     }
@@ -1512,7 +1547,7 @@
                         "name": "range [0, 1]",
                         "description": "Sets the probability of partial fallback leading to BH formation in the Maltsev remnant mass prescription"
                     },
-                    {         
+                    {
                         "name": 0.1,
                         "description": "Default choice",
                         "default": true
@@ -1743,7 +1778,7 @@
                     },
                     {
                         "name": "-3",
-                        "description": "limited to 10x the thermal rate of the accretor for all stars"   
+                        "description": "limited to 10x the thermal rate of the accretor for all stars"
                     },
                     {
                         "name": "-4",
@@ -1762,7 +1797,6 @@
                         "description": "Default choice",
                         "default": true
                     }
-
                 ]
             },
             {

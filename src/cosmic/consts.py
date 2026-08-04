@@ -41,7 +41,7 @@ GROUPED_SETTINGS = {
         "neta", "bwind", "hewind", "beta", "xi", "acc2",
         "epsnov", "eddfac", "gamma", "LBV_flag",
     ],
-    "cevars": ["alpha1", "lambdaf", "qcrit_array"],
+    "cevars": ["alpha1", "lambdaf", "qcrit_array", "plunge_a", "plunge_b"],
     "ceflags": ["ceflag", "cekickflag", "cemergeflag", "cehestarflag", "ussn"],
     "flags": [
         "tflag", "ifflag", "wdflag", "rtmsflag", "bhflag", "remnantflag",

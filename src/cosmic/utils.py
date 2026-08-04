@@ -1778,6 +1778,7 @@ def read_format_file(format_file_path):
     "he_core_mass": "",
     "co_core_mass": "",
     "binding_energy_colname": "",
+    "binding_energy_re_colname": "",
     "he_core_radius": "",
     "co_core_radius": "",
     "mass_conv_envelope": "",

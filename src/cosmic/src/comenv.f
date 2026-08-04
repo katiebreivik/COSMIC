@@ -152,7 +152,6 @@
          IF(CEFLAG.EQ.0) EORBI = MC1*M2/(2.D0*SEP)
          IF(CEFLAG.EQ.1) EORBI = M1*M2/(2.D0*SEP)
       ENDIF
-      if(output) write(*,*)'Init CE:',M01,M1,R1,M02,M2,R2,EBINDI,EORBI
 *
 * Allow for an eccentric orbit.
 *
@@ -170,7 +169,20 @@
 * If the secondary is on the main sequence see if it fills its Roche lobe.
 *
       IF(KW2.LE.1.OR.KW2.EQ.7)THEN
-         SEPF = MC1*M2/(2.D0*EORBF)
+         IF(CEFLAG.EQ.2)THEN
+*
+* Borges 2025 (arXiv:2511.02150) empirical plunge-in fit: af/R1 = a*q + b,
+* q = M2/M1 (companion mass over the donor's current total mass, not core
+* mass). Bypasses the EORBF energy balance entirely for SEPF -- EBINDI,
+* EORBI and EORBF are still computed above and available as a diagnostic,
+* matching the paper's own recommendation that alpha derived from a
+* plunge-in result should be a check on energy sufficiency, not an input
+* to the final separation.
+*
+            SEPF = (plunge_a*(M2/M1) + plunge_b)*R1
+         ELSE
+            SEPF = MC1*M2/(2.D0*EORBF)
+         ENDIF
          Q1 = MC1/M2
          Q2 = 1.D0/Q1
          RL1 = RL(Q1)
