@@ -59,6 +59,11 @@
       INTEGER*8 id1_pass,id2_pass,using_cmc
       REAL*8 merger
       COMMON /CMCPASS/ merger,id1_pass,id2_pass,using_cmc
+* maps binary component k (1 or 2) to its persistent METISSE track-pool
+* slot; set once per evolv2 call (using_cmc.eq.1 only), read by star.f/
+* hrdiag.f before dispatching to METISSE_star/METISSE_hrdiag
+      INTEGER track_id(2)
+      COMMON /TRACKIDMAP/ track_id
       REAL*8 pts1,pts2,pts3
       COMMON /POINTS/ pts1,pts2,pts3
       REAL*8 dmmax,drmax

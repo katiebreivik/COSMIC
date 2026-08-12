@@ -31,8 +31,16 @@ Cf2py intent(out) rad
 
       if(using_METISSE.eq.1) CALL initialize_front_end('cosmic')
       CALL zcnsts(z,zpars)
-      
+
       if(using_METISSE.eq.1) call allocate_track(num,mass)
+* NOTE: compute_r always calls star/hrdiag with hardcoded id=1 into its
+* own allocate_track(num,mass) pool, below. This is only safe because
+* compute_r is exclusively reached from COSMIC's own Python sampler
+* (cosmic.sample.sampler.independent), where using_cmc is always 0 --
+* star.f/hrdiag.f's id->track_id remap (added for CMC's persistent
+* track pool) only activates when using_cmc.eq.1, so it never applies
+* here. If compute_r is ever called from a using_cmc=1 context, this
+* would need its own id-remap handling.
 
       
 ***

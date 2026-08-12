@@ -78,10 +78,7 @@
 
         character(len=strlen) :: path_to_tracks, path_to_he_tracks
         COMMON/ METISSEVARS/ path_to_tracks,path_to_he_tracks
-            
-        INTEGER :: using_cmc
-        COMMON /CMCPASS/ using_cmc
-        
+
         character(len=strlen) :: string1,string2
         load_tracks = .false.
 

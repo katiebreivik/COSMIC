@@ -348,7 +348,19 @@ component.
             endif
       endif
 
-      if(using_METISSE.eq.1) call allocate_track(2,mass0)
+      if(using_METISSE.eq.1) then
+          call set_cmc_windowed_interp(using_cmc.eq.1)
+          if(using_cmc.eq.1) then
+* persistent per-star track pool: reuse this star's existing slot
+* across repeated evolv2 calls instead of rebuilding from scratch
+              call get_track_slot(id1_pass, track_id(1))
+              call get_track_slot(id2_pass, track_id(2))
+          else
+              call allocate_track(2,mass0)
+              track_id(1) = 1
+              track_id(2) = 2
+          endif
+      endif
 
       kmin = 1
       kmax = 2
@@ -4898,7 +4910,9 @@ component.
           bcm_index_out = ip
           bpp_index_out = bpp_ind
       endif
-      if (using_METISSE.eq.1) call dealloc_track()      
+* persistent per-star track pool: leave tarr slots intact for the
+* next call under using_cmc; only tear down the non-CMC 2-slot case
+      if (using_METISSE.eq.1.and.using_cmc.eq.0) call dealloc_track()
 *
 
       END SUBROUTINE evolv2

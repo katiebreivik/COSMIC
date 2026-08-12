@@ -4,16 +4,23 @@
       IMPLICIT NONE
       INCLUDE 'const_bse.h'
       
-      integer kw,id
+      integer kw,id,metisse_id
 *
       real*8 mass,aj,mt,tm,tn,tscls(20),lums(10),GB(10),zpars(20)
       real*8 bhspin
       real*8 r,lum,mc,rc,menv,renv,k2,mcx
-      
+
       if (using_METISSE.eq.1) then
+* persistent per-star track pool: remap the binary-component id (1
+* or 2) to its pool slot, set once per evolv2 call in TRACKIDMAP.
+* mc_he/mc_co below stay indexed by the original (unmapped) id --
+* they are COSMIC's own fixed 2-element per-component arrays, not
+* METISSE's track pool.
+          metisse_id = id
+          if (using_cmc.eq.1) metisse_id = track_id(id)
           CALL METISSE_hrdiag(mass,aj,mt,tm,tn,tscls,lums,GB,zpars,
      &                  r,lum,kw,mc,rc,menv,renv,k2,
-     &                  mcx,id)
+     &                  mcx,metisse_id)
 *
 * KB: Assign mc_he and mc_co from METISSE output.
 * For kw<=5: mc = McHe (core_mass = He core), mcx = McCO
@@ -44,7 +51,7 @@
               mc_he(id) = mt - mc
            endif
            ! get_bhspin is defined in assign_commons_cosmic.f90
-           if (kw==14) CALL get_bhspin(bhspin,id)
+           if (kw==14) CALL get_bhspin(bhspin,metisse_id)
           
       elseif (using_SSE.eq.1) then
           !WRITE(*,*) 'Calling SSE_hrdiag'
