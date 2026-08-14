@@ -840,9 +840,7 @@ def read_tracks_for_METISSE(path_to_tracks,IBT_Z,z_accuracy_limit,is_he):
             logtc_col=fmt_dict_keep['log_tc'],
             he4_col=fmt_dict_keep['he4_mass_frac'],
             c12_col=fmt_dict_keep['c12_mass_frac'],
-            o16_col=fmt_dict_keep['o16_mass_frac'],
-            binding_energy_col=fmt_dict_keep.get('binding_energy_colname', ''),
-            binding_energy_re_col=fmt_dict_keep.get('binding_energy_re_colname', '')
+            o16_col=fmt_dict_keep['o16_mass_frac']
         )
 
     # Finally, load in the EEPs!
